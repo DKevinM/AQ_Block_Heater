@@ -52,6 +52,10 @@ window.dataReady = fetch('https://raw.githubusercontent.com/DKevinM/AB_datapull/
       e.Abbreviation = abbrLookup[e.ParameterName]||"";
       e.Shortform = shortLookup[e.ParameterName]||"";
 
+      if (e.ParameterName === "AQHI" && String(e.Value).trim() === "10+") {
+        e.Value = 11;
+      }
+      
       let v = parseFloat(e.Value);
       if (["Ozone","Total Oxides of Nitrogen","Hydrogen Sulphide","Total Reduced Sulphur","Sulphur Dioxide","Nitric Oxide","Nitrogen Dioxide"].includes(e.ParameterName)) {
         v *= 1000;
