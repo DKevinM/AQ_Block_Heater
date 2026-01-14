@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AQHI Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; }
+    .legend {
+      background: white;
+      padding: 10px;
+      line-height: 1.5;
+    }
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.7;
+    }
+    .logo-container {
+      background: white;
+      padding: 6px;
+      border-radius: 8px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    }
+    .logo-container img {
+      display: block;
+      max-width: 100px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+  
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="data.js"></script> 
+   
+
+<script>
+  const map = L.map('map').setView([53.5461, -113.4938], 10);
+  let layerControl;
+
+  // ---------------------------------------------
+  // Base layers
+  // ---------------------------------------------
+  const baseLayers = {
+    "Streets": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map),
+    "Satellite": L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxZoom: 18,
+        attribution: 'Tiles © Esri'
+      }
+    )
+  };
+
+  // Will hold label -> Leaflet layer
+  const layerRegistry = {};
+
+  // The *exact order* you want in the layer menu:
+  const overlayOrder = [
+    // point layers
+    "Stations",
+    "Sensors (PurpleAir)",
+    // grids
+    "Alberta AQHI (stations)",
+    "Alberta AQHI (blended)",
+    "ACA AQHI (stations)",
+    "ACA AQHI (blended)",
+    "WCAS AQHI (stations)",
+    "WCAS AQHI (blended)",
+    "Edmonton AQHI (stations)",
+    "Edmonton AQHI (blended)",
+    "Strathcona County AQHI (stations)",
+    "Strathcona County AQHI (blended)",
+    "Parkland County AQHI (stations)",
+    "Parkland County AQHI (blended)",
+    // weather overlays (in desired order)
+    "Radar",
+    "Wind (U-component)",
+    "Lightning",
+    "Thunderstorm (3h)"
+  ];
+
+  const markerGroup = L.layerGroup();
+  const paLayer     = L.layerGroup();
+
+  layerRegistry["Stations"]          = markerGroup;
+  layerRegistry["Sensors (PurpleAir)"] = paLayer;
+
+  let overlayLayers = {};
+
+  // ---------------------------------------------
+  // AQHI colour function (for categories 1..10+)
+  // ---------------------------------------------
+  function getColor(aqhi) {
+    const lut = {
+      "1":  "#01cbff",
+      "2":  "#0099cb",
+      "3":  "#016797",
+      "4":  "#fffe03",
+      "5":  "#ffcb00",
+      "6":  "#ff9835",
+      "7":  "#fd6866",
+      "8":  "#fe0002",
+      "9":  "#cc0001",
+      "10": "#9a0100",
+      "10+": "#640100"
+    };
+    return lut[String(aqhi)] || "#D3D3D3";
+  }
+
+  // ---------------------------------------------
+  // Style function – uses confidence to vary opacity
+  // ---------------------------------------------
+  function style(feature) {
+    const props = feature.properties || {};
+    const v     = props.value;
+    // keep this if you still want confidence in popups elsewhere:
+    // const conf  = (props.confidence || "None").toLowerCase();
+  
+    return {
+      fillColor: getColor(v),  // AQHI → color
+      weight: 0.5,
+      opacity: 0.6,
+      color: 'white',
+      fillOpacity: 0.7         // ← FIXED, no confidence
+    };
+  }
+
+  // ---------------------------------------------
+  // Layers info: names MUST match overlayOrder
+  // ---------------------------------------------
+  const layersInfo = {
+    "Alberta AQHI (stations)":  { file: "AQHI_Alberta.geojson",                blended: false },
+    "Alberta AQHI (blended)":   { file: "AQHI_Alberta_blend.geojson",         blended: true  },
+
+    "Edmonton AQHI (stations)": { file: "AQHI_Edm.geojson",                    blended: false },
+    "Edmonton AQHI (blended)":  { file: "AQHI_Edm_blend.geojson",             blended: true  },
+
+    "Strathcona County AQHI (stations)": { file: "AQHI_Strathcona.geojson",         blended: false },
+    "Strathcona County AQHI (blended)":  { file: "AQHI_Strathcona_blend.geojson",  blended: true  },
+
+    "Parkland County AQHI (stations)": { file: "AQHI_Parkland_County.geojson",      blended: false },
+    "Parkland County AQHI (blended)":  { file: "AQHI_Parkland_County_blend.geojson", blended: true },
+
+    "ACA AQHI (stations)":      { file: "AQHI_ACA_Boundary_2022.geojson",     blended: false },
+    "ACA AQHI (blended)":       { file: "AQHI_ACA_Boundary_2022_blend.geojson", blended: true },
+
+    "WCAS AQHI (stations)":     { file: "AQHI_WCAS_2024.geojson",             blended: false },
+    "WCAS AQHI (blended)":      { file: "AQHI_WCAS_2024_blend.geojson",       blended: true }
+  };
+
+  // ---------------------------------------------
+  // Load all AQHI GeoJSONs
+  // ---------------------------------------------
+  Promise.all(
+    Object.entries(layersInfo).map(([label, cfg]) =>
+      fetch(`./output/${cfg.file}`)
+        .then(resp => resp.json())
+        .then(data => {
+          const ts = data.features?.[0]?.properties?.timestamp || "N/A";
+          const layer = L.geoJson(data, {
+            style: style,
+            onEachFeature: (feature, layer) => {
+              const p = feature.properties || {};
+              const aq   = p.value;
+              const conf = p.confidence || "None";
+              const nk   = p.nearest_km;
+              const npt  = p.n_points;
+
+              let popup = `<b>${label}</b><br>`;
+              popup    += `<b>AQHI:</b> ${aq} <br>`;
+              popup    += `<b>Timestamp:</b> ${ts}<br>`;
+              popup    += `<b>Confidence:</b> ${conf}<br>`;
+              if (nk != null && !isNaN(nk)) {
+                popup += `<b>Nearest monitor:</b> ${nk.toFixed(1)} km<br>`;
+              }
+              if (npt != null) {
+                popup += `<b>Monitors contributing:</b> ${npt}<br>`;
+              }
+              layer.bindPopup(popup);
+            }
+          });
+
+          layerRegistry[label] = layer;
+
+          // default visible: Edmonton stations-only
+          if (label === "Edmonton AQHI (stations)") {
+            layer.addTo(map);
+          }
+        })
+    )
+  ).then(() => {
+    // -----------------------------------------
+    // Weather layers
+    // -----------------------------------------
+    const weatherLayers = {
+      "Radar": L.tileLayer.wms("https://geo.weather.gc.ca/geomet/?lang=en", {
+        layers: "RADAR_1KM_RRAI",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.85
+      }),
+      "Wind (U-component)": L.tileLayer.wms("https://geo.weather.gc.ca/geomet/?lang=en", {
+        layers: "HRDPS.CONTINENTAL_UU",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.7
+      }),
+      "Lightning": L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+        layers: "Lightning_2.5km_Density",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.85
+      }),
+      "Thunderstorm (3h)": L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+        layers: "GDPS-WEonG_15km_Thunderstorm-Prob.3h",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.75
+      })
+    };
+
+    // register weather layers in the same registry
+    Object.entries(weatherLayers).forEach(([name, layer]) => {
+      layerRegistry[name] = layer;
+    });
+
+    // Build overlayLayers strictly in overlayOrder
+    overlayLayers = {};
+    overlayOrder.forEach(name => {
+      if (layerRegistry[name]) {
+        overlayLayers[name] = layerRegistry[name];
+      }
+    });
+
+    // Turn on stations and PurpleAir by default
+    markerGroup.addTo(map);
+    paLayer.addTo(map);
+
+    layerControl = L.control.layers(baseLayers, overlayLayers, {
+      collapsed: false
+    }).addTo(map);
+  })
+  .catch(err => {
+    console.error("Error loading AQHI GeoJSON layers:", err);
+  });
+
+
+
+  // ---------------------------------------------
+  // Legend (AQHI colours)
+  // ---------------------------------------------
+  const legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function () {
+    const div = L.DomUtil.create('div', 'legend');
+    const grades = ["1","2","3","4","5","6","7","8","9","10","10+"];
+    grades.forEach(g => {
+      div.innerHTML += `<i style="background:${getColor(g)}"></i> ${g}<br>`;
+    });
+    return div;
+  };
+  legend.addTo(map);
+
+  // ---------------------------------------------
+  // Logo
+  // ---------------------------------------------
+  const logo = L.control({ position: 'bottomright' });
+  logo.onAdd = function () {
+    const div = L.DomUtil.create('div', 'logo-container');
+    div.innerHTML = `<img src="ACA_LOGO_CMYK.png" alt="Logo">`;
+    return div;
+  };
+  logo.addTo(map);
+
+  // ---------------------------------------------
+  // Optional: auto-refresh every 60 minutes
+  // ---------------------------------------------
+  setInterval(() => location.reload(), 60 * 60 * 1000);
+</script>
+
+
+  
+
+<script>
+
+  window.dataReady.then(() => {
+  fetchAllStationData().then(allStations => {
+      allStations.forEach(({ stationName, lat, lon, html, aqhi }) => {
+        const fillColor = getColor(String(aqhi || "NA"));
+        const marker = L.circleMarker([lat, lon], {
+          radius: 7,
+          fillColor: fillColor,
+          color: "#222",
+          weight: 1,
+          fillOpacity: 0.85
+        }).bindPopup(html);
+        marker.addTo(markerGroup);
+      });
+      markerGroup.addTo(map);
+  });
+});
+</script>
+
+<script>
+  // PurpleAir eAQHI layer
+  const PURPLE_URL = "https://raw.githubusercontent.com/DKevinM/AB_datapull/main/data/AB_PM25_map.json";
+
+  // eAQHI = floor(pm_corr / 10) + 1, capped to 0–10
+  function computeEAQHI(pm) {
+    if (pm == null || isNaN(pm)) return null;
+    let val = Math.floor(pm / 10) + 1;
+    if (val < 0) val = 0;
+    if (val > 10) val = 10;
+    return val;
+  }
+
+  fetch(PURPLE_URL)
+    .then(res => res.json())
+    .then(data => {
+      // handle either array or { data: [...] }
+      const records = Array.isArray(data)
+        ? data
+        : (Array.isArray(data.data) ? data.data : []);
+
+      records.forEach(rec => {
+        const lat = parseFloat(rec.lat ?? rec.Latitude ?? rec.latitude);
+        const lon = parseFloat(rec.lon ?? rec.Longitude ?? rec.longitude);
+        const pm  = parseFloat(rec.pm_corr);
+
+        if (!isFinite(lat) || !isFinite(lon) || !isFinite(pm)) return;
+
+        const eAQHI = computeEAQHI(pm);
+        if (eAQHI === null) return;
+
+        // pull out sensor index (with a couple of fallbacks just in case)
+        const sensorIndex = rec.sensor_index;
+        
+        const label = rec.name || (sensorIndex != null
+          ? `Sensor ${sensorIndex}`
+          : "Unnamed sensor");
+        const color = getColor(String(eAQHI));
+
+        const days = Number(new URLSearchParams(location.search).get("days")) || 7;
+        
+        const marker = L.circleMarker([lat, lon], {
+          radius: 4,                 // ~50% smaller than stations (7)
+          fillColor: color,
+          color: "#222",
+          weight: 0.5,
+          fillOpacity: 0.85
+        }).bindPopup(
+          `<strong>PurpleAir</strong><br>` +
+          `${label}<br>` +
+           (sensorIndex != null ? `Sensor index: ${sensorIndex}<br>` : "") +
+          `eAQHI: ${eAQHI}<br>` +
+          `PM₂.₅ (corr): ${pm.toFixed(1)} µg/m³` +
+          `<hr>` +
+          `<a href="/AQHI.forecast/history/sensor_compare.html?sensor_index=${sensorIndex}"
+             target="_blank">
+             View historical PM2.5
+          </a>`          
+        );
+
+        marker.addTo(paLayer);
+      });
+
+      // Turn on PurpleAir by default (optional)
+      paLayer.addTo(map);
+    })
+    .catch(err => {
+      console.error("Error loading PurpleAir data:", err);
+    });
+</script>
+  
+  
+</body>
+</html>
