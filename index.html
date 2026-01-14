@@ -168,10 +168,6 @@
     layerControl = L.control.layers(baseLayers, overlayLayers, {
       collapsed: false
     }).addTo(map);
-  })
-  .catch(err => {
-    console.error("Error loading AQHI GeoJSON layers:", err);
-  });
 
 
 
