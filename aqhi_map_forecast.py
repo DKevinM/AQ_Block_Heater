@@ -6,7 +6,7 @@ import requests
 import geopandas as gpd
 import pandas as pd
 import numpy as np
-from shapely.geometry import Point, Polygon
+
 
 # ---------------------------------------------------------
 # CONFIG
@@ -126,36 +126,4 @@ purple_df = load_purpleair()
 print(f"Loaded {len(purple_df)} PurpleAir sensors with eAQHI")
 
 
-
-
-# ---------------------------------------------------------
-# MAIN LOOP
-# ---------------------------------------------------------
-if __name__ == "__main__":
-    shapefiles = list(Path("data").glob("*.shp"))
-
-    for shp in shapefiles:
-        shapefile_name = shp.stem  # e.g. "Edm", "Strathcona", "ACA_Boundary_2022"
-        print(f"\nProcessing (station grid): {shapefile_name}")
-
-        # 1) Station-only grid
-        try:
-            generate_current_grid(
-                df,
-                shapefile_path=str(shp),
-                output_dir="output"
-            )
-        except Exception as e:
-            print(f"Error processing station grid for {shapefile_name}: {e}")
-
-        # 2) Blended grid (stations + PurpleAir) for ALL shapefiles
-        print(f"Processing BLENDED grid for {shapefile_name}")
-        try:
-            generate_blended_grid(
-                df,
-                purple_df=purple_df,
-                shapefile_path=str(shp),
-                output_dir="output"
-            )
-        except Exception as e:
             print(f"Error processing blended grid for {shapefile_name}: {e}")
