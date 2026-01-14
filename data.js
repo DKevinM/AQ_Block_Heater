@@ -56,12 +56,19 @@ window.dataReady = fetch('https://raw.githubusercontent.com/DKevinM/AB_datapull/
         e.Value = 11;
       }
       
-      let v = parseFloat(e.Value);
-      if (["Ozone","Total Oxides of Nitrogen","Hydrogen Sulphide","Total Reduced Sulphur","Sulphur Dioxide","Nitric Oxide","Nitrogen Dioxide"].includes(e.ParameterName)) {
+
+      let rawVal = e.Value;
+      if (rawVal == null || rawVal === "") return;
+      
+      let v = parseFloat(rawVal);
+      if (isNaN(v)) return;
+      
+      if (["Ozone","Total Oxides of Nitrogen","Hydrogen Sulphide",
+           "Total Reduced Sulphur","Sulphur Dioxide",
+           "Nitric Oxide","Nitrogen Dioxide"].includes(e.ParameterName)) {
         v *= 1000;
       }
-      if (isNaN(v)) return;
-      e.Value = v;
+      
 
       const original = e.ReadingDate; // e.g. "2025-07-15T14:00:00-06:00"
       const dt = new Date(original);
