@@ -67,19 +67,6 @@
     // point layers
     "Stations",
     "Sensors (PurpleAir)",
-    // grids
-    "Alberta AQHI (stations)",
-    "Alberta AQHI (blended)",
-    "ACA AQHI (stations)",
-    "ACA AQHI (blended)",
-    "WCAS AQHI (stations)",
-    "WCAS AQHI (blended)",
-    "Edmonton AQHI (stations)",
-    "Edmonton AQHI (blended)",
-    "Strathcona County AQHI (stations)",
-    "Strathcona County AQHI (blended)",
-    "Parkland County AQHI (stations)",
-    "Parkland County AQHI (blended)",
     // weather overlays (in desired order)
     "Radar",
     "Wind (U-component)",
@@ -132,29 +119,6 @@
       fillOpacity: 0.7         // ← FIXED, no confidence
     };
   }
-
-  // ---------------------------------------------
-  // Layers info: names MUST match overlayOrder
-  // ---------------------------------------------
-  const layersInfo = {
-    "Alberta AQHI (stations)":  { file: "AQHI_Alberta.geojson",                blended: false },
-    "Alberta AQHI (blended)":   { file: "AQHI_Alberta_blend.geojson",         blended: true  },
-
-    "Edmonton AQHI (stations)": { file: "AQHI_Edm.geojson",                    blended: false },
-    "Edmonton AQHI (blended)":  { file: "AQHI_Edm_blend.geojson",             blended: true  },
-
-    "Strathcona County AQHI (stations)": { file: "AQHI_Strathcona.geojson",         blended: false },
-    "Strathcona County AQHI (blended)":  { file: "AQHI_Strathcona_blend.geojson",  blended: true  },
-
-    "Parkland County AQHI (stations)": { file: "AQHI_Parkland_County.geojson",      blended: false },
-    "Parkland County AQHI (blended)":  { file: "AQHI_Parkland_County_blend.geojson", blended: true },
-
-    "ACA AQHI (stations)":      { file: "AQHI_ACA_Boundary_2022.geojson",     blended: false },
-    "ACA AQHI (blended)":       { file: "AQHI_ACA_Boundary_2022_blend.geojson", blended: true },
-
-    "WCAS AQHI (stations)":     { file: "AQHI_WCAS_2024.geojson",             blended: false },
-    "WCAS AQHI (blended)":      { file: "AQHI_WCAS_2024_blend.geojson",       blended: true }
-  };
 
   // ---------------------------------------------
   // Load all AQHI GeoJSONs
