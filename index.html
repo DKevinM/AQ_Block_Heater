@@ -120,47 +120,7 @@
     };
   }
 
-  // ---------------------------------------------
-  // Load all AQHI GeoJSONs
-  // ---------------------------------------------
-  Promise.all(
-    Object.entries(layersInfo).map(([label, cfg]) =>
-      fetch(`./output/${cfg.file}`)
-        .then(resp => resp.json())
-        .then(data => {
-          const ts = data.features?.[0]?.properties?.timestamp || "N/A";
-          const layer = L.geoJson(data, {
-            style: style,
-            onEachFeature: (feature, layer) => {
-              const p = feature.properties || {};
-              const aq   = p.value;
-              const conf = p.confidence || "None";
-              const nk   = p.nearest_km;
-              const npt  = p.n_points;
 
-              let popup = `<b>${label}</b><br>`;
-              popup    += `<b>AQHI:</b> ${aq} <br>`;
-              popup    += `<b>Timestamp:</b> ${ts}<br>`;
-              popup    += `<b>Confidence:</b> ${conf}<br>`;
-              if (nk != null && !isNaN(nk)) {
-                popup += `<b>Nearest monitor:</b> ${nk.toFixed(1)} km<br>`;
-              }
-              if (npt != null) {
-                popup += `<b>Monitors contributing:</b> ${npt}<br>`;
-              }
-              layer.bindPopup(popup);
-            }
-          });
-
-          layerRegistry[label] = layer;
-
-          // default visible: Edmonton stations-only
-          if (label === "Edmonton AQHI (stations)") {
-            layer.addTo(map);
-          }
-        })
-    )
-  ).then(() => {
     // -----------------------------------------
     // Weather layers
     // -----------------------------------------
