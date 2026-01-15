@@ -29,3 +29,23 @@ async function loadCalgaryAQHI() {
   calgaryAQHI.current = obs[0];
   calgaryAQHI.forecast = fc.slice(0, 3);
 }
+
+function drawCalgaryPanel() {
+  if (!calgaryAQHI.current) return;
+
+  const box = v => `
+    <div class="aqhi-box" style="background:${getColor(v)}">${v}</div>
+  `;
+
+  const html = `
+    <div id="calgary-panel">
+      <div class="title">Calgary AQHI</div>
+      <div class="row">
+        ${box(calgaryAQHI.current.value)}
+        ${calgaryAQHI.forecast.map(f => box(f.value)).join("")}
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", html);
+}
