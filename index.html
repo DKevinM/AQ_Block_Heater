@@ -30,6 +30,43 @@
       max-width: 100px;
       height: auto;
     }
+
+    #calgary-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: white;
+      padding: 8px 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.35);
+      font-family: Arial;
+      z-index: 1000;
+    }
+    
+    #calgary-panel .title {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    
+    #calgary-panel .row {
+      display: flex;
+      gap: 6px;
+    }
+    
+    .aqhi-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 6px;
+      color: #111;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+
+    
   </style>
 </head>
 <body>
@@ -37,6 +74,8 @@
   
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 <script src="data.js"></script> 
+<script src="/CAN_AQHI/calgary_aqhi.js"></script>
+  
    
 
 <script>
