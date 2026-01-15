@@ -197,19 +197,19 @@
     async function loadSensors() {
       console.log("Loading sensors from purpleair_sensors…");
 
+      const params = new URLSearchParams(window.location.search);
+      const historySensor = params.get("sensor_index");
+      
+      if (!historySensor) return;      
     
       const { data, error } = await supabase
-        .from("purpleair_sensors")   // <--- use the view
+        .from("purpleair_sensors") 
         .select("sensor_index, name, network")
-        .order("sensor_index", { ascending: true });
-    
+        .eq("sensor_index", historySensor)   // 🔥 filter to one sensor
+        .limit(1);
+      
       if (error) {
         console.error("purpleair_sensors error:", error);
-        return;
-      }
-    
-      if (!data || data.length === 0) {
-        console.warn("No rows in purpleair_sensors");
         return;
       }
     
