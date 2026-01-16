@@ -74,10 +74,11 @@
   
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 <script src="data.js"></script> 
-<script src="/CAN_AQHI/calgary_aqhi.js"></script>
-  
+<script src="js/calgary_aqhi.js"></script>
    
+fetch("/CAN_AQHI/data/aqhi_observations.csv")
 
+  
 <script>
   const map = L.map('map').setView([53.5461, -113.4938], 10);
   let layerControl;
@@ -331,6 +332,9 @@ window.dataReady.then(() => {
     .catch(err => {
       console.error("Error loading PurpleAir data:", err);
     });
+
+  loadCalgaryAQHI().then(drawCalgaryPanel);
+  
 </script>
   
   
