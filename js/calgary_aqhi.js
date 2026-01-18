@@ -9,44 +9,71 @@ let calgaryAQHI = {
 
 
 async function loadCalgaryAQHI() {
+
   const [obsTxt, fcTxt] = await Promise.all([
     fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.csv")
       .then(r => r.text()),
-  
+
     fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.csv")
       .then(r => r.text())
   ]);
 
+  // ---------- PARSE OBSERVATIONS (same idea as before) ----------
+  const parseObs = txt =>
+    txt.trim().split("\n").slice(1).map(r => {
+      const c = r.split(",");
+      return {
+        station: c[1],
+        value: Number(c[3]),
+        time: c[4]
+      };
+    });
 
-const parse = txt =>
-  txt.trim().split("\n").slice(1).map(r => {
-    const cols = r.split(",");
+  const obs = parseObs(obsTxt)
+    .filter(d => /calgary/i.test(d.station))
+    .sort((a,b) => new Date(b.time) - new Date(a.time));
 
-    return {
-      station: cols[1],          // Calgary is column 1
-      value: Number(cols[3]),   // AQHI is column 3
-      time: cols[4]             // ISO time is column 4
-    };
-  });
-
-
-
-  const obs = parse(obsTxt).filter(d =>
-    /calgary/i.test(d.station)
-  );
-  
-  const fc = parse(fcTxt).filter(d =>
-    /calgary/i.test(d.station)
-  );
+  calgaryAQHI.current = obs[0];   // latest observed AQHI
 
 
-  
-  obs.sort((a,b)=>new Date(b.time)-new Date(a.time));
-  fc.sort((a,b)=>new Date(a.time)-new Date(b.time));
+  // ---------- PARSE FORECAST (THIS IS THE KEY FIX) ----------
+  const rows = fcTxt.trim().split("\n");
+  const header = rows.shift().split(",");
 
-  calgaryAQHI.current = obs[0];
-  calgaryAQHI.forecast = fc.slice(0, 3);
+  // find Calgary row
+  const calgaryRow = rows
+    .map(r => r.split(","))
+    .find(c => /calgary/i.test(c[1]));   // column 1 = name
+
+  if (!calgaryRow) {
+    console.warn("No Calgary row found in forecast file");
+    calgaryAQHI.forecast = [];
+    return;
+  }
+
+  // column indexes from your header
+  const i_p1 = header.indexOf("p1_aqhi"); // Tonight
+  const i_p2 = header.indexOf("p2_aqhi"); // Evening
+  const i_p3 = header.indexOf("p3_aqhi"); // Tomorrow
+
+  const i_p1label = header.indexOf("p1_label");
+  const i_p2label = header.indexOf("p2_label");
+  const i_p3label = header.indexOf("p3_label");
+
+  calgaryAQHI.forecast = [
+    { label: calgaryRow[i_p1label] || "Tonight",
+      value: Number(calgaryRow[i_p1]) },
+
+    { label: calgaryRow[i_p2label] || "Evening",
+      value: Number(calgaryRow[i_p2]) },
+
+    { label: calgaryRow[i_p3label] || "Tomorrow",
+      value: Number(calgaryRow[i_p3]) }
+  ];
 }
+
+
+
 
 
 
