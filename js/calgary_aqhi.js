@@ -30,14 +30,20 @@ const parse = txt =>
   });
 
 
+
+  const normalize = s => 
+    String(s || "").trim().toLowerCase();
+  
   const obs = parse(obsTxt).filter(d =>
-    d.station.toLowerCase().includes("calgary")
+    normalize(d.station).includes("calgary")
   );
-
+  
   const fc = parse(fcTxt).filter(d =>
-    d.station.toLowerCase().includes("calgary")
+    normalize(d.station).includes("calgary")
   );
 
+
+  
   obs.sort((a,b)=>new Date(b.time)-new Date(a.time));
   fc.sort((a,b)=>new Date(a.time)-new Date(b.time));
 
