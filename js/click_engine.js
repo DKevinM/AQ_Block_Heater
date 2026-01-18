@@ -46,9 +46,16 @@ async function renderClickData(lat, lng, map) {
     markerGroup.addLayer(circle);
     stationMarkers.push(circle);
 
-    window.fetchRecentStationData(st.StationName)
-      .then(html => circle.bindPopup(html, { maxWidth: 300 }));
-  });
+    const popupHtml = `
+      <div style="font-size:0.9em;">
+        <strong>${st.StationName}</strong><br>
+        AQHI: ${aqhiVal ?? "N/A"}<br>
+        (Click the station for full history in the main app)
+      </div>
+    `;
+    
+    circle.bindPopup(popupHtml, { maxWidth: 300 });
+
 
   // ---------- WEATHER ----------
   try {
