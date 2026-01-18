@@ -21,9 +21,13 @@ function getColor(aqhi) {
 
 async function loadCalgaryAQHI() {
   const [obsTxt, fcTxt] = await Promise.all([
-    fetch("/CAN_AQHI/data/aqhi_observations.csv").then(r => r.text()),
-    fetch("/CAN_AQHI/data/aqhi_forecasts.csv").then(r => r.text())
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.csv")
+      .then(r => r.text()),
+  
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.csv")
+      .then(r => r.text())
   ]);
+
 
   const parse = txt =>
     txt.trim().split("\n").slice(1).map(r => {
