@@ -1,2 +1,2 @@
-getNearestStations(lat, lon, n = 2);
-getNearestPurpleAir(lat, lon, n = 3);
+// getNearestStations(lat, lon, n = 2);
+// getNearestPurpleAir(lat, lon, n = 3);
