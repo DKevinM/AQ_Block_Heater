@@ -1,7 +1,10 @@
 async function renderClickData(lat, lng, map) {
 
-  // 1) Add marker at clicked location
-  const marker = L.marker([lat, lng]).addTo(map);
+  // 1) Add marker at clicked point → use markerGroup
+  const marker = L.marker([lat, lng]);
+  markerGroup.addLayer(marker);
+  existingMarkers.push(marker);
+
   marker.bindTooltip(
     `Your location<br>Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`,
     { sticky: true, direction: "top", opacity: 0.9 }
@@ -37,7 +40,11 @@ async function renderClickData(lat, lng, map) {
       fillColor: color,
       weight: 3,
       fillOpacity: 0.8
-    }).addTo(map);
+    });
+
+    // 👉 ADD TO LAYER GROUP (not map)
+    markerGroup.addLayer(circle);
+    stationMarkers.push(circle);
 
     window.fetchRecentStationData(st.StationName)
       .then(html => circle.bindPopup(html, { maxWidth: 300 }));
