@@ -31,15 +31,12 @@ const parse = txt =>
 
 
 
-  const normalize = s => 
-    String(s || "").trim().toLowerCase();
-  
   const obs = parse(obsTxt).filter(d =>
-    normalize(d.station).includes("calgary")
+    /calgary/i.test(d.station)
   );
   
   const fc = parse(fcTxt).filter(d =>
-    normalize(d.station).includes("calgary")
+    /calgary/i.test(d.station)
   );
 
 
@@ -157,3 +154,10 @@ loadCalgaryAQHI()
     drawCalgaryPanel();
   })
   .catch(err => console.error("❌ Calgary AQHI failed:", err));
+
+  
+  window.refreshCalgaryPanel = async function() {
+    await loadCalgaryAQHI();
+    drawCalgaryPanel();
+  };
+
