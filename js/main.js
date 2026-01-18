@@ -5,7 +5,7 @@ const openStreetMapLayer = L.tileLayer(
 
 const map = L.map('map', {
   layers: [openStreetMapLayer]
-}).setView([53.5636, -113.1802], 9);
+}).setView([51.045150, -114.045313], 11);
 
 L.control.layers({
   "OpenStreetMap": openStreetMapLayer
