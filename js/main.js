@@ -198,3 +198,97 @@ function style(feature) {
   };
 }
 
+
+
+// =========================================================
+// THIS BELONGS IN: main.js  (AT THE VERY BOTTOM)
+// =========================================================
+
+async function renderClickData(lat, lng, map) {
+
+  // ----- 1) MARK CLICK LOCATION -----
+  const marker = L.marker([lat, lng]);
+  markerGroup.addLayer(marker);
+  existingMarkers.push(marker);
+
+  marker.bindTooltip(
+    `Your location<br>Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`,
+    { sticky: true, direction: "top", opacity: 0.9 }
+  ).openTooltip();
+
+  // ==================================================
+  // 2) NEAREST AQHI STATION
+  // ==================================================
+  const closestStation = Object.values(dataByStation)
+    .map(arr => {
+      const aqhiObj = arr.find(d => d.ParameterName === "AQHI");
+      return aqhiObj || arr[0];
+    })
+    .map(r => ({
+      ...r,
+      dist_km: (getDistance(lat, lng, r.Latitude, r.Longitude) / 1000).toFixed(1)
+    }))
+    .sort((a, b) => a.dist_km - b.dist_km)[0];
+
+  const stationColor = getColor(closestStation.Value);
+
+  const stationCircle = L.circleMarker(
+    [closestStation.Latitude, closestStation.Longitude],
+    {
+      radius: 15,
+      color: "#000",
+      fillColor: stationColor,
+      weight: 3,
+      fillOpacity: 0.8
+    }
+  );
+
+  markerGroup.addLayer(stationCircle);
+  stationMarkers.push(stationCircle);
+
+  const stationPopup = `
+  <strong>Nearest AQHI Station</strong><br>
+  ${closestStation.StationName}<br>
+  Distance: ${closestStation.dist_km} km<br>
+  AQHI: ${closestStation.Value}
+  `;
+
+  stationCircle.bindPopup(stationPopup);
+
+  // ==================================================
+  // 3) LOCAL WEATHER
+  // ==================================================
+  try {
+    const wresp = await fetch(
+      `https://api.open-meteo.com/v1/forecast?` +
+      `latitude=${lat}&longitude=${lng}` +
+      `&hourly=temperature_2m,relative_humidity_2m,precipitation,rain,` +
+      `snowfall,cloudcover,uv_index,wind_speed_10m,wind_direction_10m,` +
+      `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
+    );
+
+    const wdata = await wresp.json();
+
+    // update big weather panel (if present)
+    if (typeof showWeather === "function") {
+      showWeather(wdata);
+    }
+
+    // update Calgary mini-panel weather
+    if (window.updateMiniWeather) {
+      window.updateMiniWeather(wdata);
+    }
+
+  } catch (err) {
+    console.error("Weather error:", err);
+  }
+
+  // ==================================================
+  // 4) NEAREST PURPLEAIR
+  // ==================================================
+  if (typeof showPurpleAir === "function") {
+    showPurpleAir(lat, lng);
+  }
+}
+
+
