@@ -11,7 +11,6 @@ let calgaryAQHI = {
 // LOAD DATA (BOTH OBSERVATIONS + FORECAST)
 // --------------------------------------------------------
 async function loadCalgaryAQHI() {
-
   const [obsTxt, fcTxt] = await Promise.all([
     fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.csv")
       .then(r => r.text()),
@@ -20,32 +19,39 @@ async function loadCalgaryAQHI() {
       .then(r => r.text())
   ]);
 
+  const obs = parseObs(obsTxt).filter(d => /calgary/i.test(d.station));
+  const fc  = parseFc(fcTxt).filter(d => /calgary/i.test(d.station));
+
+  obs.sort((a,b)=>new Date(b.time)-new Date(a.time));
+  fc.sort((a,b)=>new Date(a.time)-new Date(b.time));
+
+  calgaryAQHI.current = obs[0];
+  calgaryAQHI.forecast = fc[0];   // SINGLE ROW with p1/p2/p3
+}
+
   // -------- Parse observations ----------
   const parseObs = txt =>
-    txt.trim().split("\n").slice(1).map(line => {
-      const cols = line.split(",");
-
+    txt.trim().split("\n").slice(1).map(r => {
+      const cols = r.split(",");
       return {
-        id: cols[0],
-        station: cols[1],          // "Calgary"
-        value: Number(cols[3]),    // AQHI
+        station: cols[1],          // Calgary
+        value: Math.round(Number(cols[3])),   // ✅ FORCE INTEGER AQHI
         time: cols[4]
       };
     });
-
-  // -------- Parse forecasts ----------
+  
   const parseFc = txt =>
-    txt.trim().split("\n").slice(1).map(line => {
-      const cols = line.split(",");
-
+    txt.trim().split("\n").slice(1).map(r => {
+      const cols = r.split(",");
       return {
-        station: cols[1],     // "Calgary"
-        p1: Number(cols[10]),
-        p2: Number(cols[12]),
-        p3: Number(cols[14]),
-        p4: Number(cols[16])
+        station: cols[1],
+        p1: Math.round(Number(cols[9])),   // Tonight
+        p2: Math.round(Number(cols[11])),  // Evening
+        p3: Math.round(Number(cols[13])),  // Tomorrow
+        time: cols[4]
       };
     });
+  
 
   // -------- Filter Calgary ----------
   const obs = parseObs(obsTxt).filter(d =>
@@ -81,9 +87,10 @@ function drawCalgaryPanel() {
   if (!calgaryAQHI.current) return;
 
   const v0 = calgaryAQHI.current.value;
-  const f1 = calgaryAQHI.forecast?.[0];
-  const f2 = calgaryAQHI.forecast?.[1];
-  const f3 = calgaryAQHI.forecast?.[2];
+  const f1 = calgaryAQHI.forecast?.p1;
+  const f2 = calgaryAQHI.forecast?.p2;
+  const f3 = calgaryAQHI.forecast?.p3;
+
 
   const clicked = window.lastClickedLatLng
     ? `${window.lastClickedLatLng.lat.toFixed(4)}, ${window.lastClickedLatLng.lng.toFixed(4)}`
