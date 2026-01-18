@@ -60,9 +60,14 @@ async function renderClickData(lat, lng, map) {
       `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
     );
 
+
     const wdata = await wresp.json();
-    showWeather(wdata);
-    window.updateMiniWeather(wdata);
+    
+    // send the weather to your mini panel in main.js
+    if (window.updateMiniWeather) {
+      window.updateMiniWeather(wdata);
+    }
+
 
 
   } catch (err) {
