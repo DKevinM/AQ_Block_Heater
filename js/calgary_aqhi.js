@@ -18,11 +18,17 @@ async function loadCalgaryAQHI() {
   ]);
 
 
-  const parse = txt =>
-    txt.trim().split("\n").slice(1).map(r => {
-      const [station, time, value] = r.split(",");
-      return { station, time, value: Number(value) };
-    });
+const parse = txt =>
+  txt.trim().split("\n").slice(1).map(r => {
+    const cols = r.split(",");
+
+    return {
+      station: cols[1],          // Calgary is column 1
+      value: Number(cols[3]),   // AQHI is column 3
+      time: cols[4]             // ISO time is column 4
+    };
+  });
+
 
   const obs = parse(obsTxt).filter(d =>
     d.station.toLowerCase().includes("calgary")
