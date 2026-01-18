@@ -26,6 +26,10 @@ map.on("click", async function (e) {
   await renderClickData(lat, lng, map);
 });
 
+  if (window.refreshCalgaryPanel) {
+    window.refreshCalgaryPanel();
+  }
+
 
 // ---------- ONE SET OF LAYER GROUPS ONLY ----------
 const markerGroup = L.layerGroup().addTo(map);
