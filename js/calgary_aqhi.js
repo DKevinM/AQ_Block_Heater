@@ -204,9 +204,11 @@ function drawCalgaryPanel() {
     Local forecast (next hour)
   </div>
 
-  <div id="mini-weather" style="font-size:12px;">
-    Click the map for weather…
+
+  <div id="mini-weather" class="info-small">
+    Weather loads after you click the map.
   </div>
+
 
   <div style="margin-top:10px;">
     <div style="font-weight:600;">External Resources</div>
