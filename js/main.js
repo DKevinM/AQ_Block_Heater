@@ -18,6 +18,22 @@ window.purpleAirMarkers = [];
 let existingMarkers = [];
 let stationMarkers = [];
 
+
+
+window.lastClickedLatLng = null;
+
+map.on("click", async function (e) {
+  const { lat, lng } = e.latlng;
+  window.lastClickedLatLng = { lat, lng };
+
+  if (hasClickedBefore) clearMap();
+  hasClickedBefore = true;
+
+  await renderClickData(lat, lng, map);
+});
+
+
+
 // ---------------- CLEAR MAP ----------------
 function clearMap() {
   const allMarkers = existingMarkers
@@ -29,18 +45,6 @@ function clearMap() {
   stationMarkers = [];
   window.purpleAirMarkers = [];
 }
-
-// ---------------- MAP CLICK ----------------
-let hasClickedBefore = false;
-
-map.on("click", async function (e) {
-  const { lat, lng } = e.latlng;
-
-  if (hasClickedBefore) clearMap();
-  hasClickedBefore = true;
-
-  await renderClickData(lat, lng, map);
-});
 
 
 
@@ -111,9 +115,6 @@ overlayOrder.forEach(name => {
   }
 });
 
-// turn on points by default
-markerGroup.addTo(map);
-paLayer.addTo(map);
 
 const layerControl = L.control.layers(baseLayers, overlayLayers, {
   collapsed: false
