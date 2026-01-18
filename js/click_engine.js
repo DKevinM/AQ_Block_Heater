@@ -32,7 +32,7 @@ async function renderClickData(lat, lng, map) {
       aqhiVal = null;
     }
 
-    const color = getAQHIColor(aqhiVal);
+    const color = getColor(aqhiVal);
 
     const circle = L.circleMarker([st.Latitude, st.Longitude], {
       radius: 15,
