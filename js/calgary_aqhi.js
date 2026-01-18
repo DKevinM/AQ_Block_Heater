@@ -51,62 +51,93 @@ const parse = txt =>
   calgaryAQHI.forecast = fc.slice(0, 3);
 }
 
-function drawCalgaryPanel() {
 
-  if (!calgaryAQHI.current) {
-    console.warn("No Calgary AQHI found — panel not drawn.");
-    return;
+
+  function drawCalgaryPanel() {
+    if (!calgaryAQHI.current) return;
+  
+    const v0 = calgaryAQHI.current.value;
+    const f1 = calgaryAQHI.forecast?.[0]?.value;
+    const f2 = calgaryAQHI.forecast?.[1]?.value;
+    const f3 = calgaryAQHI.forecast?.[2]?.value;
+  
+    const clicked = window.lastClickedLatLng
+      ? `${window.lastClickedLatLng.lat.toFixed(4)}, ${window.lastClickedLatLng.lng.toFixed(4)}`
+      : "Click the map";
+  
+    const html = `
+    <div id="calgary-panel" style="max-width: 320px; font-family: Arial;">
+    
+      <div class="info-title">Calgary Air Quality (AQHI)</div>
+  
+      <div class="info-small" style="margin-top:6px;">
+        Lower is better for outdoor activities
+      </div>
+  
+      <div class="info-label" style="margin-top:8px;">📍 Clicked location:</div>
+      <div style="margin-bottom:6px;">${clicked}</div>
+  
+      <!-- AQHI blocks -->
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:8px;">
+        
+        <div style="text-align:center;">
+          <div class="aqhi-color-box"
+               style="background:${getColor(v0)}; width:60px; height:40px; margin:auto;">
+            ${v0}
+          </div>
+          <div class="info-small">Current</div>
+        </div>
+  
+        <div style="text-align:center;">
+          <div class="aqhi-color-box"
+               style="background:${getColor(f1)}; width:60px; height:40px; margin:auto;">
+            ${f1 ?? "–"}
+          </div>
+          <div class="info-small">Tonight</div>
+        </div>
+  
+        <div style="text-align:center;">
+          <div class="aqhi-color-box"
+               style="background:${getColor(f2)}; width:60px; height:40px; margin:auto;">
+            ${f2 ?? "–"}
+          </div>
+          <div class="info-small">Evening</div>
+        </div>
+  
+        <div style="text-align:center;">
+          <div class="aqhi-color-box"
+               style="background:${getColor(f3)}; width:60px; height:40px; margin:auto;">
+            ${f3 ?? "–"}
+          </div>
+          <div class="info-small">Tomorrow</div>
+        </div>
+  
+      </div>
+  
+      <div class="info-label" style="margin-top:10px;">Local forecast (next hour)</div>
+      <div id="mini-weather" class="info-small">
+        Click the map for weather…
+      </div>
+  
+      <div class="resource-links" style="margin-top:10px;">
+        <div class="info-label">External Resources</div>
+        <a href="https://firesmoke.ca/forecasts/current/" target="_blank">
+          FireSmoke Canada – Current Forecast
+        </a><br>
+        <a href="https://eer.cmc.ec.gc.ca/mandats/AutoSim/ops/Fire_CA_HRDPS_CWFIS/latest/Canada/latest/img/Canada/anim.html"
+           target="_blank">
+          ECCC Fire & Smoke HRDPS Animation
+        </a>
+      </div>
+  
+    </div>
+    `;
+  
+    // Remove old panel if it exists, then add new one
+    document.getElementById("calgary-panel")?.remove();
+    document.body.insertAdjacentHTML("beforeend", html);
   }
 
-  const loc = window.lastClickedLatLng || {
-    lat: 51.045150,
-    lng: -114.045313
-  };
-
-  const box = (v, label) => `
-    <div class="aqhi-cell">
-      <div class="aqhi-label">${label}</div>
-      <div class="aqhi-box" style="background:${getColor(v)}">${v}</div>
-    </div>
-  `;
-
-  const html = `
-    <div id="calgary-panel">
-      <div class="title">Calgary AQHI</div>
-  
-      <div style="font-size: 0.85em; margin-bottom: 6px;">
-          ${
-            window.lastClickedLatLng
-              ? window.lastClickedLatLng.lat.toFixed(4) +
-                ", " +
-                window.lastClickedLatLng.lng.toFixed(4)
-              : "Click the map"
-          }
-        </span>
-      </div>
-  
-      <div class="row">
-        ${box(calgaryAQHI.current.value)}
-        ${calgaryAQHI.forecast.map(f => box(f.value)).join("")}
-      </div>
-  
-      <hr>
-  
-      <div style="font-size: 0.85em;">
-        <strong>Local forecast (next hour)</strong><br>
-        <div id="mini-weather">
-          Click the map for weather…
-        </div>
-      </div>
-    </div>
-  `;
-
-
-  const old = document.getElementById("calgary-panel");
-  if (old) old.remove();
-
-  document.body.insertAdjacentHTML("beforeend", html);
-}
 
 
 // Run immediately once the file loads
