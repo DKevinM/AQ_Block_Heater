@@ -46,24 +46,58 @@ const parse = txt =>
 }
 
 function drawCalgaryPanel() {
-  if (!calgaryAQHI.current) return;
 
-  const box = v => `
-    <div class="aqhi-box" style="background:${getColor(v)}">${v}</div>
-  `;
+  if (!calgaryAQHI.current) {
+    console.warn("No Calgary AQHI found — panel not drawn.");
+    return;
+  }
 
-  const html = `
-    <div id="calgary-panel">
-      <div class="title">Calgary AQHI</div>
-      <div class="row">
-        ${box(calgaryAQHI.current.value)}
-        ${calgaryAQHI.forecast.map(f => box(f.value)).join("")}
-      </div>
+  const loc = window.lastClickedLatLng || {
+    lat: 51.045150,
+    lng: -114.045313
+  };
+
+  const box = (v, label) => `
+    <div class="aqhi-cell">
+      <div class="aqhi-label">${label}</div>
+      <div class="aqhi-box" style="background:${getColor(v)}">${v}</div>
     </div>
   `;
 
+  const html = `
+  <div id="calgary-panel">
+
+    <div class="loc-line">
+      📍 Clicked location: 
+      ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}
+    </div>
+
+    <h2>Calgary Air Quality (AQHI)</h2>
+    <div class="subtitle">
+      Lower is better for outdoor activities
+    </div>
+
+    <div class="aqhi-grid">
+      ${box(calgaryAQHI.current.value, "Current")}
+      ${box(calgaryAQHI.forecast[0]?.value ?? "—", "Tonight")}
+      ${box(calgaryAQHI.forecast[1]?.value ?? "—", "Evening")}
+      ${box(calgaryAQHI.forecast[2]?.value ?? "—", "Tomorrow")}
+    </div>
+
+    <div class="forecast-title">Local forecast (next 6 hours)</div>
+    <div id="mini-weather">
+      <em>Click the map to load local weather…</em>
+    </div>
+
+  </div>
+  `;
+
+  const old = document.getElementById("calgary-panel");
+  if (old) old.remove();
+
   document.body.insertAdjacentHTML("beforeend", html);
 }
+
 
 // Run immediately once the file loads
 loadCalgaryAQHI()
