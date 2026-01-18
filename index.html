@@ -103,7 +103,12 @@ window.dataReady.then(() => {
 });
 </script>
 
-<script src="js/calgary_aqhi.js"></script>
+<script>
+loadCalgaryAQHI()
+  .then(drawCalgaryPanel)
+  .catch(err => console.error("Calgary failed:", err));
+</script>
+
 
   
   
