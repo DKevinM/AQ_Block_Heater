@@ -8,6 +8,25 @@ const map = L.map('map', {
   layers: [openStreetMapLayer]
 }).setView([51.045150, -114.045313], 15);
 
+let hasClickedBefore = false;
+window.lastClickedLatLng = null;
+
+// ---------------- MAP CLICK (THIS WAS MISSING) ----------------
+map.on("click", async function (e) {
+  const { lat, lng } = e.latlng;
+
+  // remember where the user clicked
+  window.lastClickedLatLng = { lat, lng };
+
+  // clear old markers after first click
+  if (hasClickedBefore) clearMap();
+  hasClickedBefore = true;
+
+  // run your whole pipeline
+  await renderClickData(lat, lng, map);
+});
+
+
 // ---------- ONE SET OF LAYER GROUPS ONLY ----------
 const markerGroup = L.layerGroup().addTo(map);
 const paLayer = L.layerGroup().addTo(map);
@@ -19,18 +38,6 @@ let existingMarkers = [];
 let stationMarkers = [];
 
 
-
-window.lastClickedLatLng = null;
-
-map.on("click", async function (e) {
-  const { lat, lng } = e.latlng;
-  window.lastClickedLatLng = { lat, lng };
-
-  if (hasClickedBefore) clearMap();
-  hasClickedBefore = true;
-
-  await renderClickData(lat, lng, map);
-});
 
 
 window.updateMiniWeather = function(w) {
