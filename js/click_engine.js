@@ -68,12 +68,12 @@ async function renderClickData(lat, lng, map) {
     );
 
 
-    const wdata = await wresp.json();
+    showWeather(wdata);
     
-    // send the weather to your mini panel in main.js
     if (window.updateMiniWeather) {
       window.updateMiniWeather(wdata);
     }
+
 
 
 
