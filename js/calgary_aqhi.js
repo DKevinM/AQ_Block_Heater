@@ -71,32 +71,36 @@ function drawCalgaryPanel() {
   `;
 
   const html = `
-  <div id="calgary-panel">
-
-    <div class="loc-line">
-      📍 Clicked location: 
-      ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}
+    <div id="calgary-panel">
+      <div class="title">Calgary AQHI</div>
+  
+      <div style="font-size: 0.85em; margin-bottom: 6px;">
+          ${
+            window.lastClickedLatLng
+              ? window.lastClickedLatLng.lat.toFixed(4) +
+                ", " +
+                window.lastClickedLatLng.lng.toFixed(4)
+              : "Click the map"
+          }
+        </span>
+      </div>
+  
+      <div class="row">
+        ${box(calgaryAQHI.current.value)}
+        ${calgaryAQHI.forecast.map(f => box(f.value)).join("")}
+      </div>
+  
+      <hr>
+  
+      <div style="font-size: 0.85em;">
+        <strong>Local forecast (next hour)</strong><br>
+        <div id="mini-weather">
+          Click the map for weather…
+        </div>
+      </div>
     </div>
-
-    <h2>Calgary Air Quality (AQHI)</h2>
-    <div class="subtitle">
-      Lower is better for outdoor activities
-    </div>
-
-    <div class="aqhi-grid">
-      ${box(calgaryAQHI.current.value, "Current")}
-      ${box(calgaryAQHI.forecast[0]?.value ?? "—", "Tonight")}
-      ${box(calgaryAQHI.forecast[1]?.value ?? "—", "Evening")}
-      ${box(calgaryAQHI.forecast[2]?.value ?? "—", "Tomorrow")}
-    </div>
-
-    <div class="forecast-title">Local forecast (next 6 hours)</div>
-    <div id="mini-weather">
-      <em>Click the map to load local weather…</em>
-    </div>
-
-  </div>
   `;
+
 
   const old = document.getElementById("calgary-panel");
   if (old) old.remove();
