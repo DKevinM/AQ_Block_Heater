@@ -63,3 +63,16 @@ function drawCalgaryPanel() {
 loadCalgaryAQHI()
   .then(drawCalgaryPanel)
   .catch(err => console.error("Calgary AQHI failed:", err));
+
+
+
+
+
+console.log("👉 Calgary file LOADED");
+
+loadCalgaryAQHI()
+  .then(() => {
+    console.log("👉 Calgary DATA loaded:", calgaryAQHI);
+    drawCalgaryPanel();
+  })
+  .catch(err => console.error("❌ Calgary AQHI failed:", err));
