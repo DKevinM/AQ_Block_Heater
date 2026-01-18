@@ -46,9 +46,6 @@ let stationMarkers = [];
 
 window.updateMiniWeather = function(w) {
 
-  const el = document.getElementById("mini-weather");
-  if (!el) return;
-
   const t = Math.round(w.hourly.temperature_2m[0]);
   const ws = Math.round(w.hourly.wind_speed_10m[0]);
   const uv = Math.round(w.hourly.uv_index[0]);
