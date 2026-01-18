@@ -1,11 +1,18 @@
-// ---------------------------------------------
-// PurpleAir loader for click events
-// ---------------------------------------------
-async function showPurpleAir(lat, lng) {
+// ---------- PURPLEAIR LOADER ----------
 
-  const PURPLE_URL =
-    "https://raw.githubusercontent.com/DKevinM/AB_datapull/main/data/AB_PM25_map.json";
+const PURPLE_URL =
+  "https://raw.githubusercontent.com/DKevinM/AB_datapull/main/data/AB_PM25_map.json";
 
+// eAQHI = floor(pm_corr / 10) + 1, capped 0–10
+function computeEAQHI(pm) {
+  if (pm == null || isNaN(pm)) return null;
+  let val = Math.floor(pm / 10) + 1;
+  if (val < 0) val = 0;
+  if (val > 10) val = 10;
+  return val;
+}
+
+async function loadPurpleAir() {
   try {
     const res = await fetch(PURPLE_URL);
     const data = await res.json();
@@ -15,26 +22,23 @@ async function showPurpleAir(lat, lng) {
       : (Array.isArray(data.data) ? data.data : []);
 
     records.forEach(rec => {
-      const lat2 = parseFloat(rec.lat ?? rec.Latitude ?? rec.latitude);
-      const lon2 = parseFloat(rec.lon ?? rec.Longitude ?? rec.longitude);
-      const pm   = parseFloat(rec.pm_corr);
+      const lat = parseFloat(rec.lat ?? rec.Latitude ?? rec.latitude);
+      const lon = parseFloat(rec.lon ?? rec.Longitude ?? rec.longitude);
+      const pm  = parseFloat(rec.pm_corr);
 
-      if (!isFinite(lat2) || !isFinite(lon2) || !isFinite(pm)) return;
+      if (!isFinite(lat) || !isFinite(lon) || !isFinite(pm)) return;
 
-      // eAQHI estimate
-      let eAQHI = Math.floor(pm / 10) + 1;
-      if (eAQHI < 0) eAQHI = 0;
-      if (eAQHI > 10) eAQHI = 10;
+      const eAQHI = computeEAQHI(pm);
+      if (eAQHI === null) return;
 
+      const sensorIndex = rec.sensor_index;
       const label =
         rec.name ||
-        (rec.sensor_index != null
-          ? `Sensor ${rec.sensor_index}`
-          : "PurpleAir sensor");
+        (sensorIndex != null ? `Sensor ${sensorIndex}` : "Unnamed sensor");
 
       const color = getColor(String(eAQHI));
 
-      const marker = L.circleMarker([lat2, lon2], {
+      const marker = L.circleMarker([lat, lon], {
         radius: 4,
         fillColor: color,
         color: "#222",
@@ -43,16 +47,27 @@ async function showPurpleAir(lat, lng) {
       }).bindPopup(
         `<strong>PurpleAir</strong><br>` +
         `${label}<br>` +
+        (sensorIndex != null ? `Sensor index: ${sensorIndex}<br>` : "") +
         `eAQHI: ${eAQHI}<br>` +
-        `PM₂.₅ (corr): ${pm.toFixed(1)} µg/m³`
+        `PM₂.₅ (corr): ${pm.toFixed(1)} µg/m³` +
+        `<hr>` +
+        `<a href="/AQHI.forecast/history/sensor_compare.html?sensor_index=${sensorIndex}"
+           target="_blank">
+           View historical PM2.5
+        </a>`
       );
 
-      // 👉 IMPORTANT: add to your PurpleAir layer
+      // IMPORTANT: add to your existing layer group
       paLayer.addLayer(marker);
       window.purpleAirMarkers.push(marker);
     });
+
+    paLayer.addTo(map);
 
   } catch (err) {
     console.error("Error loading PurpleAir data:", err);
   }
 }
+
+// run it once map + paLayer exist
+document.addEventListener("DOMContentLoaded", loadPurpleAir);
