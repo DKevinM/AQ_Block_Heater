@@ -37,40 +37,32 @@ async function loadCalgaryAQHI() {
 
 
   // ---------- PARSE FORECAST (THIS IS THE KEY FIX) ----------
-  const rows = fcTxt.trim().split("\n");
-  const header = rows.shift().split(",");
-
-  // find Calgary row
-  const calgaryRow = rows
+  const fcLines = fcTxt.trim().split("\n");
+  const header = fcLines.shift().split(",");
+  
+  // find the SINGLE Calgary row
+  const calgaryRow = fcLines
     .map(r => r.split(","))
-    .find(c => /calgary/i.test(c[1]));   // column 1 = name
-
+    .find(cols => /calgary/i.test(cols[1]));   // column 1 = city name
+  
   if (!calgaryRow) {
     console.warn("No Calgary row found in forecast file");
     calgaryAQHI.forecast = [];
     return;
   }
-
-  // column indexes from your header
-  const i_p1 = header.indexOf("p1_aqhi"); // Tonight
-  const i_p2 = header.indexOf("p2_aqhi"); // Evening
-  const i_p3 = header.indexOf("p3_aqhi"); // Tomorrow
-
-  const i_p1label = header.indexOf("p1_label");
-  const i_p2label = header.indexOf("p2_label");
-  const i_p3label = header.indexOf("p3_label");
-
+  
+  // find the AQHI columns dynamically
+  const i_p1 = header.indexOf("p1_aqhi");
+  const i_p2 = header.indexOf("p2_aqhi");
+  const i_p3 = header.indexOf("p3_aqhi");
+  
+  // build the forecast array your panel expects
   calgaryAQHI.forecast = [
-    { label: calgaryRow[i_p1label] || "Tonight",
-      value: Number(calgaryRow[i_p1]) },
-
-    { label: calgaryRow[i_p2label] || "Evening",
-      value: Number(calgaryRow[i_p2]) },
-
-    { label: calgaryRow[i_p3label] || "Tomorrow",
-      value: Number(calgaryRow[i_p3]) }
+    { label: "Tonight",  value: Number(calgaryRow[i_p1]) },
+    { label: "Evening",  value: Number(calgaryRow[i_p2]) },
+    { label: "Tomorrow", value: Number(calgaryRow[i_p3]) }
   ];
-}
+
 
 
 
