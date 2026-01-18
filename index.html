@@ -96,6 +96,25 @@
 </head>
 <body>
 <div id="map"></div>
+
+<!-- BIG WEATHER PANEL -->
+<div id="weather-info"
+     style="position:fixed;
+            top:20px;
+            right:20px;
+            width:280px;
+            background:white;
+            padding:10px;
+            border:1px solid #888;
+            border-radius:8px;
+            font-size:13px;
+            z-index:9999;">
+  Click the map for weather…
+</div>
+
+<!-- SMALL WEATHER BOX FOR CALGARY PANEL -->
+<div id="mini-weather" style="display:none;"></div>
+  
   
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 <script src="data.js"></script> 
