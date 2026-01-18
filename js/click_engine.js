@@ -62,6 +62,8 @@ async function renderClickData(lat, lng, map) {
 
     const wdata = await wresp.json();
     showWeather(wdata);
+    window.updateMiniWeather(wdata);
+
 
   } catch (err) {
     console.error("Error fetching weather data", err);
