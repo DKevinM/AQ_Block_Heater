@@ -112,8 +112,8 @@ overlayOrder.forEach(name => {
 });
 
 // turn on points by default
-markerGroup.addLayer(marker);   // for stations
-paLayer.addLayer(marker);       // for PurpleAir
+markerGroup.addTo(map);
+paLayer.addTo(map);
 
 const layerControl = L.control.layers(baseLayers, overlayLayers, {
   collapsed: false
@@ -167,5 +167,4 @@ function style(feature) {
     fillOpacity: 0.7
   };
 }
-
 
