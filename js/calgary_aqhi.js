@@ -3,20 +3,9 @@ let calgaryAQHI = {
   forecast: []
 };
 
-function getColor(aqhi) {
-  if (aqhi == null || isNaN(aqhi)) return "#808080";
 
-  if (aqhi >= 10) return "#9a0100";
-  if (aqhi >= 9)  return "#cc0001";
-  if (aqhi >= 8)  return "#fe0002";
-  if (aqhi >= 7)  return "#fd6866";
-  if (aqhi >= 6)  return "#ff9835";
-  if (aqhi >= 5)  return "#ffcb00";
-  if (aqhi >= 4)  return "#fffe03";
-  if (aqhi >= 3)  return "#016797";
-  if (aqhi >= 2)  return "#0099cb";
-  return "#01cbff";
-}
+// USE the global getColor from main.js
+// (do NOT redefine it here)
 
 
 async function loadCalgaryAQHI() {
@@ -70,8 +59,7 @@ function drawCalgaryPanel() {
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
-
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadCalgaryAQHI();
-  drawCalgaryPanel();
-});
+// Run immediately once the file loads
+loadCalgaryAQHI()
+  .then(drawCalgaryPanel)
+  .catch(err => console.error("Calgary AQHI failed:", err));
