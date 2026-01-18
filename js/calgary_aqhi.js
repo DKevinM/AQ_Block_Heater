@@ -71,8 +71,6 @@ const parse = txt =>
         Lower is better for outdoor activities
       </div>
   
-      <div class="info-label" style="margin-top:8px;">📍 Clicked location:</div>
-      <div style="margin-bottom:6px;">${clicked}</div>
   
       <!-- AQHI blocks -->
       <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:8px;">
