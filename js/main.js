@@ -1,15 +1,18 @@
-// ---------------- MAP SETUP ----------------
+// ---------- BASE LAYER FIRST ----------
 const openStreetMapLayer = L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 );
 
+// ---------- SINGLE MAP ----------
 const map = L.map('map', {
   layers: [openStreetMapLayer]
 }).setView([51.045150, -114.045313], 11);
 
-L.control.layers({
-  "OpenStreetMap": openStreetMapLayer
-}).addTo(map);
+// ---------- ONE SET OF LAYER GROUPS ONLY ----------
+const markerGroup = L.layerGroup().addTo(map);
+const paLayer = L.layerGroup().addTo(map);
+window.purpleAirMarkers = [];
+
 
 // Track markers so we can clear them
 let existingMarkers = [];
@@ -39,21 +42,17 @@ map.on("click", async function (e) {
   await renderClickData(lat, lng, map);
 });
 
-const map = L.map('map').setView([51.045150, -114.045313], 11);
+
 
 const baseLayers = {
-  "Streets": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18
-  }).addTo(map),
-
+  "Streets": openStreetMapLayer,
   "Satellite": L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    {
-      maxZoom: 18,
-      attribution: 'Tiles © Esri'
-    }
+    { maxZoom: 18, attribution: 'Tiles © Esri' }
   )
 };
+
+
 
 const layerRegistry = {};
 
@@ -66,10 +65,6 @@ const overlayOrder = [
   "Thunderstorm (3h)"
 ];
 
-const markerGroup = L.layerGroup();
-const paLayer = L.layerGroup();
-
-window.purpleAirMarkers = [];   // important for clearMap()
 
 layerRegistry["Stations"] = markerGroup;
 layerRegistry["Sensors (PurpleAir)"] = paLayer;
@@ -117,8 +112,8 @@ overlayOrder.forEach(name => {
 });
 
 // turn on points by default
-markerGroup.addTo(map);
-paLayer.addTo(map);
+markerGroup.addLayer(marker);   // for stations
+paLayer.addLayer(marker);       // for PurpleAir
 
 const layerControl = L.control.layers(baseLayers, overlayLayers, {
   collapsed: false
