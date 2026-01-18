@@ -1,6 +1,6 @@
 async function renderClickData(lat, lng, map) {
 
-  // 1) Add marker at clicked point → use markerGroup
+  // 1) Marker at clicked point
   const marker = L.marker([lat, lng]);
   markerGroup.addLayer(marker);
   existingMarkers.push(marker);
@@ -42,7 +42,6 @@ async function renderClickData(lat, lng, map) {
       fillOpacity: 0.8
     });
 
-    // 👉 ADD TO LAYER GROUP (not map)
     markerGroup.addLayer(circle);
     stationMarkers.push(circle);
 
@@ -53,11 +52,11 @@ async function renderClickData(lat, lng, map) {
         (Click the station for full history in the main app)
       </div>
     `;
-    
+
     circle.bindPopup(popupHtml, { maxWidth: 300 });
+  });
 
-
-  // ---------- WEATHER ----------
+  // ---------- WEATHER (RUN ONCE, AFTER STATIONS) ----------
   try {
     const wresp = await fetch(
       `https://api.open-meteo.com/v1/forecast?` +
@@ -67,20 +66,19 @@ async function renderClickData(lat, lng, map) {
       `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
     );
 
+    const wdata = await wresp.json();   // 👈 THIS WAS MISSING
 
-    showWeather(wdata);
-    
+    console.log("Weather for click:", wdata);
+
+    // Update the Calgary panel mini-weather box
     if (window.updateMiniWeather) {
       window.updateMiniWeather(wdata);
     }
-
-
-
 
   } catch (err) {
     console.error("Error fetching weather data", err);
   }
 
-  // ---------- PURPLEAIR ----------
+  // ---------- PURPLEAIR (RUN LAST) ----------
   showPurpleAir(lat, lng);
 }
