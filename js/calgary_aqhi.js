@@ -19,6 +19,30 @@ async function loadCalgaryAQHI() {
       .then(r => r.text())
   ]);
 
+
+  const parseObs = txt =>
+    txt.trim().split("\n").slice(1).map(r => {
+      const cols = r.split(",");
+      return {
+        station: cols[1],
+        value: Math.round(Number(cols[3])),
+        time: cols[4]
+      };
+    });
+  
+  const parseFc = txt =>
+    txt.trim().split("\n").slice(1).map(r => {
+      const cols = r.split(",");
+      return {
+        station: cols[1],
+        p1: Math.round(Number(cols[9])),
+        p2: Math.round(Number(cols[11])),
+        p3: Math.round(Number(cols[13])),
+        time: cols[4]
+      };
+    });
+
+  
   const obs = parseObs(obsTxt).filter(d => /calgary/i.test(d.station));
   const fc  = parseFc(fcTxt).filter(d => /calgary/i.test(d.station));
 
@@ -119,10 +143,6 @@ function drawCalgaryPanel() {
     Calgary Air Quality (AQHI)
   </div>
 
-  <div style="font-size:12px; margin-top:4px;">
-    Lower is better for outdoor activities
-  </div>
-
   <div style="
       display:grid;
       grid-template-columns: repeat(4, 1fr);
@@ -205,9 +225,8 @@ function drawCalgaryPanel() {
   </div>
 
 
-  <div id="mini-weather" class="info-small">
-    Weather loads after you click the map.
-  </div>
+  <div id="mini-weather"></div>
+
 
 
   <div style="margin-top:10px;">
