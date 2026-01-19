@@ -44,24 +44,34 @@ let stationMarkers = [];
 
 
 
+
 window.updateMiniWeather = function(w) {
 
   const el = document.getElementById("mini-weather");
   if (!el) return;
 
-  // ----- CURRENT CONDITIONS (top) -----
+  // ----- CURRENT CONDITIONS -----
+  const timeNow = w.hourly.time[0].slice(11,16);      // HH:MM
   const t0  = Math.round(w.hourly.temperature_2m[0]);
   const ws0 = Math.round(w.hourly.wind_speed_10m[0]);
+  const wd0 = Math.round(w.hourly.wind_direction_10m[0]);
   const uv0 = Math.round(w.hourly.uv_index[0]);
   const rain0 = w.hourly.rain[0].toFixed(1);
 
-  // ----- BUILD 6-HOUR FORECAST TABLE (compact) -----
+  // ----- WIND DIRECTION TEXT -----
+  function windDirText(deg){
+    const dirs = ["N","NE","E","SE","S","SW","W","NW","N"];
+    return dirs[Math.round(deg/45)];
+  }
+
+  // ----- BUILD 6-HOUR FORECAST TABLE -----
   let forecastRows = "";
 
   for (let i = 1; i <= 6; i++) {
     const time = w.hourly.time[i].slice(11,16); // HH:MM
     const temp = Math.round(w.hourly.temperature_2m[i]);
     const wind = Math.round(w.hourly.wind_speed_10m[i]);
+    const wdir = Math.round(w.hourly.wind_direction_10m[i]);
     const rain = w.hourly.rain[i].toFixed(1);
 
     forecastRows += `
@@ -69,34 +79,32 @@ window.updateMiniWeather = function(w) {
         <td>${time}</td>
         <td>${temp}°C</td>
         <td>${wind} km/h</td>
+        <td>${windDirText(wdir)}</td>
         <td>${rain} mm</td>
       </tr>
     `;
   }
 
-  // ----- WRITE TO MINI PANEL (BOTTOM LEFT) -----
+  // ----- FINAL MINI-WEATHER HTML -----
   el.innerHTML = `
-  <div style="font-weight:600; margin-bottom:6px;">Current Weather</div>
-  <div style="line-height:1.3;">
+  <div style="font-weight:700; margin-bottom:6px;">Local Weather</div>
+
+  <div style="font-size:12px; margin-bottom:6px;">
+    <b>${timeNow}</b><br>
     Temp: ${t0}°C<br>
-    Wind: ${ws0} km/h<br>
-    UV: ${uv0}<br>
-    Rain: ${rain0} mm
+    Wind: ${ws0} km/h ${windDirText(wd0)}<br>
+    Rain: ${rain0} mm<br>
+    UV: ${uv0}
   </div>
 
-  <hr style="margin:6px 0;">
-
-  <div style="font-weight:600; margin-bottom:4px;">
-    Next 6 hours
-  </div>
-
-  <table style="font-size:11px; width:100%; border-collapse: collapse;">
+  <table style="width:100%; font-size:11px; border-collapse: collapse;">
     <thead>
-      <tr style="border-bottom:1px solid #ccc;">
-        <th style="text-align:left;">Time</th>
-        <th style="text-align:left;">Temp</th>
-        <th style="text-align:left;">Wind</th>
-        <th style="text-align:left;">Rain</th>
+      <tr style="border-bottom:1px solid #aaa;">
+        <th>Time</th>
+        <th>Temp</th>
+        <th>Wind</th>
+        <th>Dir</th>
+        <th>Rain</th>
       </tr>
     </thead>
     <tbody>
@@ -105,6 +113,8 @@ window.updateMiniWeather = function(w) {
   </table>
   `;
 };
+
+
 
 
 
