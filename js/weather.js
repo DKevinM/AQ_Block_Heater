@@ -1,57 +1,63 @@
+function compassDir(deg) {
+  const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
+// BIG PANEL
 function showWeather(data) {
 
-  const panel = document.querySelector("#weather-info");
-  if (!panel) return;
-
-  // ----- FIND CURRENT EDMONTON HOUR INDEX -----
-  const nowYEG = new Date().toLocaleString("en-CA", {
-    timeZone: "America/Edmonton"
-  });
-
-  const now = new Date(nowYEG);
-
+  const now = new Date();
   let i = 0;
+
   while (i < data.hourly.time.length) {
     const t = new Date(data.hourly.time[i]);
     if (t >= now) break;
     i++;
   }
 
-  console.log("Weather index used:", i, data.hourly.time[i]);
+  const get = f => data.hourly[f][i];
 
-  const get = (field) => data.hourly[field][i];
+  document.querySelector("#weather-info").innerHTML = `
+    <h3>Current Weather</h3>
+    <table>
+      <tr><td><strong>Time</strong></td><td>${now.toLocaleString('en-CA',{timeZone:'America/Edmonton'})}</td></tr>
+      <tr><td>Temperature</td><td>${Math.round(get("temperature_2m"))} °C</td></tr>
+      <tr><td>Humidity</td><td>${Math.round(get("relative_humidity_2m"))} %</td></tr>
+      <tr><td>Rain</td><td>${get("rain").toFixed(1)} mm</td></tr>
+      <tr><td>Cloud</td><td>${Math.round(get("cloudcover"))} %</td></tr>
+      <tr><td>Wind</td><td>${Math.round(get("wind_speed_10m"))} km/h ${compassDir(get("wind_direction_10m"))}</td></tr>
+    </table>
+  `;
+}
 
-  // ----- CURRENT CONDITIONS TABLE (top) -----
-  const rows = [
-    ["Time", new Date().toLocaleString('en-CA',{timeZone:'America/Edmonton'})],
-    ["Temperature", `${get("temperature_2m")} °C`],
-    ["Humidity", `${get("relative_humidity_2m")} %`],
-    ["Rain", `${get("rain")} mm`],
-    ["Cloud Cover", `${get("cloudcover")} %`],
-    ["Wind Speed", `${get("wind_speed_10m")} km/h`],
-    ["Wind Direction", `${degToCompass(get("wind_direction_10m"))}`]
-  ];
+// MINI PANEL (6-HOUR FORECAST FROM NOW)
+window.updateMiniWeather = function(w) {
 
-  const currentTable = rows.map(row =>
-    `<tr><td><strong>${row[0]}</strong></td><td>${row[1]}</td></tr>`
-  ).join("");
+  const el = document.getElementById("mini-weather");
+  if (!el) return;
 
-  // ----- NEXT 6 HOURS FORECAST TABLE -----
-  let forecastRows = "";
+  const now = new Date();
+  let i = 0;
+
+  while (i < w.hourly.time.length) {
+    const t = new Date(w.hourly.time[i]);
+    if (t >= now) break;
+    i++;
+  }
+
+  let rows = "";
 
   for (let k = 0; k < 6; k++) {
-    const idx = i + k;
-    if (idx >= data.hourly.time.length) break;
+    const t = new Date(w.hourly.time[i + k]);
+    const hhmm = t.toLocaleTimeString("en-CA",{hour:"2-digit",minute:"2-digit",timeZone:"America/Edmonton"});
+    const temp = Math.round(w.hourly.temperature_2m[i + k]);
+    const wind = Math.round(w.hourly.wind_speed_10m[i + k]);
+    const rain = w.hourly.rain[i + k].toFixed(1);
+    const dir = compassDir(w.hourly.wind_direction_10m[i + k]);
 
-    const time = data.hourly.time[idx].slice(11,16); // HH:MM
-    const temp = Math.round(data.hourly.temperature_2m[idx]);
-    const wind = Math.round(data.hourly.wind_speed_10m[idx]);
-    const rain = data.hourly.rain[idx].toFixed(1);
-    const dir  = degToCompass(data.hourly.wind_direction_10m[idx]);
-
-    forecastRows += `
+    rows += `
       <tr>
-        <td>${time}</td>
+        <td>${hhmm}</td>
         <td>${temp}°C</td>
         <td>${wind} km/h ${dir}</td>
         <td>${rain} mm</td>
@@ -59,27 +65,10 @@ function showWeather(data) {
     `;
   }
 
-  panel.innerHTML = `
-  <h3>Current Weather</h3>
-  <table style="width:100%; font-size:12px;">
-    <tbody>${currentTable}</tbody>
-  </table>
-
-  <div style="margin-top:8px; font-weight:700;">Next 6 Hours</div>
-  <table style="width:100%; font-size:11px; border-collapse:collapse;">
-    <tr>
-      <th align="left">Time</th>
-      <th>Temp</th>
-      <th>Wind</th>
-      <th>Rain</th>
-    </tr>
-    ${forecastRows}
-  </table>
+  el.innerHTML = `
+    <table style="width:100%; font-size:11px;">
+      <tr><th>Time</th><th>Temp</th><th>Wind</th><th>Rain</th></tr>
+      ${rows}
+    </table>
   `;
-}
-
-// ----- HELPER: degrees → N / NE / SW -----
-function degToCompass(deg) {
-  const dirs = ["N","NE","E","SE","S","SW","W","NW","N"];
-  return dirs[Math.round(deg/45)];
-}
+};
