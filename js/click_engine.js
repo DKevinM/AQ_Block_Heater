@@ -76,21 +76,20 @@ async function renderClickData(lat, lng, map) {
       `snowfall,cloudcover,uv_index,wind_speed_10m,wind_direction_10m,` +
       `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
     );
-
+  
     const wdata = await wresp.json();
-    
     console.log("Weather for click:", wdata);
-    
-    // 1) Update BIG weather panel (if present)
+  
+    // Update big weather box (if you have it)
     if (typeof showWeather === "function") {
       showWeather(wdata);
     }
-    
-    // 2) Update bottom-left mini weather box
+  
+    // Update bottom-left Calgary mini weather
     if (window.updateMiniWeather) {
       window.updateMiniWeather(wdata);
     }
-
+  
   } catch (err) {
     console.error("Weather error:", err);
   }
