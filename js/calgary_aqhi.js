@@ -1,16 +1,42 @@
 // ========================================================
-// CALGARY AQHI PANEL — CLEAN WORKING VERSION
+// CALGARY AQHI PANEL — CLEAN WORKING VERSION (FIXED)
 // ========================================================
 
 let calgaryAQHI = {
-  current: null,
-  forecast: []
+  current: null,   // { station, value, time }
+  forecast: null   // { p1, p2, p3, time }
 };
 
 // --------------------------------------------------------
-// LOAD DATA (BOTH OBSERVATIONS + FORECAST)
+// SHARED PARSERS (DEFINED ONCE — OUTSIDE FUNCTION)
+// --------------------------------------------------------
+const parseObs = txt =>
+  txt.trim().split("\n").slice(1).map(r => {
+    const cols = r.split(",");
+    return {
+      station: cols[1],
+      value: Math.round(Number(cols[3])), // FORCE INTEGER
+      time: cols[4]
+    };
+  });
+
+const parseFc = txt =>
+  txt.trim().split("\n").slice(1).map(r => {
+    const cols = r.split(",");
+    return {
+      station: cols[1],
+      p1: Math.round(Number(cols[9])),
+      p2: Math.round(Number(cols[11])),
+      p3: Math.round(Number(cols[13])),
+      time: cols[4]
+    };
+  });
+
+// --------------------------------------------------------
+// LOAD DATA (OBS + FORECAST)
 // --------------------------------------------------------
 async function loadCalgaryAQHI() {
+
   const [obsTxt, fcTxt] = await Promise.all([
     fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.csv")
       .then(r => r.text()),
@@ -19,92 +45,21 @@ async function loadCalgaryAQHI() {
       .then(r => r.text())
   ]);
 
-
-  const parseObs = txt =>
-    txt.trim().split("\n").slice(1).map(r => {
-      const cols = r.split(",");
-      return {
-        station: cols[1],
-        value: Math.round(Number(cols[3])),
-        time: cols[4]
-      };
-    });
-  
-  const parseFc = txt =>
-    txt.trim().split("\n").slice(1).map(r => {
-      const cols = r.split(",");
-      return {
-        station: cols[1],
-        p1: Math.round(Number(cols[9])),
-        p2: Math.round(Number(cols[11])),
-        p3: Math.round(Number(cols[13])),
-        time: cols[4]
-      };
-    });
-
-  
   const obs = parseObs(obsTxt).filter(d => /calgary/i.test(d.station));
   const fc  = parseFc(fcTxt).filter(d => /calgary/i.test(d.station));
 
-  obs.sort((a,b)=>new Date(b.time)-new Date(a.time));
-  fc.sort((a,b)=>new Date(a.time)-new Date(b.time));
+  // newest first
+  obs.sort((a,b)=> new Date(b.time) - new Date(a.time));
+  fc.sort((a,b)=> new Date(b.time) - new Date(a.time));
 
-  calgaryAQHI.current = obs[0];
-  calgaryAQHI.forecast = fc[0];   // SINGLE ROW with p1/p2/p3
-}
-
-  // -------- Parse observations ----------
-  const parseObs = txt =>
-    txt.trim().split("\n").slice(1).map(r => {
-      const cols = r.split(",");
-      return {
-        station: cols[1],          // Calgary
-        value: Math.round(Number(cols[3])),   // ✅ FORCE INTEGER AQHI
-        time: cols[4]
-      };
-    });
-  
-  const parseFc = txt =>
-    txt.trim().split("\n").slice(1).map(r => {
-      const cols = r.split(",");
-      return {
-        station: cols[1],
-        p1: Math.round(Number(cols[9])),   // Tonight
-        p2: Math.round(Number(cols[11])),  // Evening
-        p3: Math.round(Number(cols[13])),  // Tomorrow
-        time: cols[4]
-      };
-    });
-  
-
-  // -------- Filter Calgary ----------
-  const obs = parseObs(obsTxt).filter(d =>
-    /calgary/i.test(d.station)
-  );
-
-  const fc = parseFc(fcTxt).filter(d =>
-    /calgary/i.test(d.station)
-  );
-
-  // -------- Sort to newest ----------
-  obs.sort((a, b) => new Date(b.time) - new Date(a.time));
-
-  // -------- Store results ----------
-  calgaryAQHI.current = obs[0];
-
-  if (fc.length > 0) {
-    calgaryAQHI.forecast = [
-      fc[0].p1,
-      fc[0].p2,
-      fc[0].p3
-    ];
-  }
+  calgaryAQHI.current = obs[0] || null;
+  calgaryAQHI.forecast = fc[0] || null;
 
   console.log("Calgary AQHI loaded:", calgaryAQHI);
 }
 
 // --------------------------------------------------------
-// DRAW PANEL
+// DRAW PANEL (NO ICONS, NO JUNK TEXT)
 // --------------------------------------------------------
 function drawCalgaryPanel() {
 
@@ -114,11 +69,6 @@ function drawCalgaryPanel() {
   const f1 = calgaryAQHI.forecast?.p1;
   const f2 = calgaryAQHI.forecast?.p2;
   const f3 = calgaryAQHI.forecast?.p3;
-
-
-  const clicked = window.lastClickedLatLng
-    ? `${window.lastClickedLatLng.lat.toFixed(4)}, ${window.lastClickedLatLng.lng.toFixed(4)}`
-    : "Click the map";
 
   const html = `
   <div id="calgary-panel" style="
@@ -134,10 +84,6 @@ function drawCalgaryPanel() {
       font-family: Arial;
       z-index: 9999;
   ">
-
-  <div style="font-weight:600;">Clicked location: ${clicked}</div>
-
-  <hr>
 
   <div style="font-size:16px; font-weight:700;">
     Calgary Air Quality (AQHI)
@@ -224,10 +170,7 @@ function drawCalgaryPanel() {
     Local forecast (next hour)
   </div>
 
-
   <div id="mini-weather"></div>
-
-
 
   <div style="margin-top:10px;">
     <div style="font-weight:600;">External Resources</div>
@@ -248,13 +191,12 @@ function drawCalgaryPanel() {
 }
 
 // --------------------------------------------------------
-// AUTO-RUN ON LOAD
+// AUTO RUN
 // --------------------------------------------------------
 loadCalgaryAQHI()
   .then(drawCalgaryPanel)
   .catch(err => console.error("Calgary AQHI failed:", err));
 
-// Allow refresh from main.js
 window.refreshCalgaryPanel = async function() {
   await loadCalgaryAQHI();
   drawCalgaryPanel();
