@@ -37,31 +37,46 @@ const parseFc = txt =>
 // --------------------------------------------------------
 async function loadCalgaryAQHI() {
 
-  const [obsTxt, fcTxt] = await Promise.all([
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.csv")
-      .then(r => r.text()),
+  const [obs, fc] = await Promise.all([
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.json")
+      .then(r => r.json()),
 
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.csv")
-      .then(r => r.text())
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.json")
+      .then(r => r.json())
   ]);
 
-  const obs = parseObs(obsTxt).filter(d => /calgary/i.test(d.station));
-  const fc  = parseFc(fcTxt).filter(d => /calgary/i.test(d.station));
+  // ---- FILTER CALGARY (case-insensitive) ----
+  const obsCal = obs.filter(d => /calgary/i.test(d.name || d.station));
+  const fcCal  = fc.filter(d => /calgary/i.test(d.name || d.station));
 
   // newest first
-  obs.sort((a,b)=> new Date(b.time) - new Date(a.time));
-  fc.sort((a,b)=> new Date(b.time) - new Date(a.time));
+  obsCal.sort((a,b) => new Date(b.time || b.forecast_datetime) -
+                       new Date(a.time || a.forecast_datetime));
+  fcCal.sort((a,b) => new Date(b.forecast_datetime) -
+                      new Date(a.forecast_datetime));
 
-  calgaryAQHI.current = obs[0] || null;
-  calgaryAQHI.forecast = {
-    p1: fc[0].p1,
-    p2: fc[0].p2,
-    p3: fc[0].p3
-  };
+  // ---- STORE CURRENT ----
+  calgaryAQHI.current = obsCal[0] ? {
+    station: obsCal[0].name || obsCal[0].station,
+    value: Math.round(Number(obsCal[0].aqhi || obsCal[0].value)),
+    time: obsCal[0].time || obsCal[0].forecast_datetime
+  } : null;
 
+  // ---- STORE FORECAST (single row) ----
+  if (fcCal.length > 0) {
+    calgaryAQHI.forecast = {
+      p1: Math.round(Number(fcCal[0].p1_aqhi ?? fcCal[0].p1)),
+      p2: Math.round(Number(fcCal[0].p2_aqhi ?? fcCal[0].p2)),
+      p3: Math.round(Number(fcCal[0].p3_aqhi ?? fcCal[0].p3))
+    };
+  } else {
+    console.warn("No Calgary forecast found in JSON");
+    calgaryAQHI.forecast = { p1:null, p2:null, p3:null };
+  }
 
-  console.log("Calgary AQHI loaded:", calgaryAQHI);
+  console.log("Calgary AQHI loaded (JSON):", calgaryAQHI);
 }
+
 
 // --------------------------------------------------------
 // DRAW PANEL (NO ICONS, NO JUNK TEXT)
