@@ -53,7 +53,12 @@ async function loadCalgaryAQHI() {
   fc.sort((a,b)=> new Date(b.time) - new Date(a.time));
 
   calgaryAQHI.current = obs[0] || null;
-  calgaryAQHI.forecast = fc[0] || null;
+  calgaryAQHI.forecast = {
+    p1: fc[0].p1,
+    p2: fc[0].p2,
+    p3: fc[0].p3
+  };
+
 
   console.log("Calgary AQHI loaded:", calgaryAQHI);
 }
@@ -170,7 +175,21 @@ function drawCalgaryPanel() {
     Local forecast (next hour)
   </div>
 
-  <div id="mini-weather"></div>
+
+  <div id="mini-weather" style="
+     position: fixed;
+     bottom: 15px;
+     left: 15px;
+     background: white;
+     padding: 8px;
+     border-radius: 6px;
+     border: 1px solid #999;
+     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+     font-size: 12px;
+     max-width: 220px;
+     z-index: 9999;
+  "></div>
+    
 
   <div style="margin-top:10px;">
     <div style="font-weight:600;">External Resources</div>
