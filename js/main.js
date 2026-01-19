@@ -216,44 +216,49 @@ async function renderClickData(lat, lng, map) {
   // ==================================================
   // 2) NEAREST AQHI STATION
   // ==================================================
-  const closestStation = Object.values(dataByStation)
-    .map(arr => {
-      const aqhiObj = arr.find(d => d.ParameterName === "AQHI");
-      return aqhiObj || arr[0];
-    })
-    .map(r => ({
-      ...r,
-      dist_km: (getDistance(lat, lng, r.Latitude, r.Longitude) / 1000).toFixed(1)
-    }))
-    .sort((a, b) => a.dist_km - b.dist_km)[0];
+  if (!window.dataByStation) {
+    console.error("dataByStation is missing — cannot find nearest station.");
+  } else {
 
-  const stationColor = getColor(closestStation.Value);
+    const closestStation = Object.values(dataByStation)
+      .map(arr => {
+        const aqhiObj = arr.find(d => d.ParameterName === "AQHI");
+        return aqhiObj || arr[0];
+      })
+      .map(r => ({
+        ...r,
+        dist_km: (getDistance(lat, lng, r.Latitude, r.Longitude) / 1000).toFixed(1)
+      }))
+      .sort((a, b) => a.dist_km - b.dist_km)[0];
 
-  const stationCircle = L.circleMarker(
-    [closestStation.Latitude, closestStation.Longitude],
-    {
-      radius: 15,
-      color: "#000",
-      fillColor: stationColor,
-      weight: 3,
-      fillOpacity: 0.8
-    }
-  );
+    const stationColor = getColor(closestStation.Value);
 
-  markerGroup.addLayer(stationCircle);
-  stationMarkers.push(stationCircle);
+    const stationCircle = L.circleMarker(
+      [closestStation.Latitude, closestStation.Longitude],
+      {
+        radius: 15,
+        color: "#000",
+        fillColor: stationColor,
+        weight: 3,
+        fillOpacity: 0.8
+      }
+    );
 
-  const stationPopup = `
-  <strong>Nearest AQHI Station</strong><br>
-  ${closestStation.StationName}<br>
-  Distance: ${closestStation.dist_km} km<br>
-  AQHI: ${closestStation.Value}
-  `;
+    markerGroup.addLayer(stationCircle);
+    stationMarkers.push(stationCircle);
 
-  stationCircle.bindPopup(stationPopup);
+    const stationPopup = `
+      <strong>Nearest AQHI Station</strong><br>
+      ${closestStation.StationName}<br>
+      Distance: ${closestStation.dist_km} km<br>
+      AQHI: ${closestStation.Value}
+    `;
+
+    stationCircle.bindPopup(stationPopup);
+  }
 
   // ==================================================
-  // 3) LOCAL WEATHER
+  // 3) LOCAL WEATHER  — THIS IS THE SINGLE SOURCE OF TRUTH
   // ==================================================
   try {
     const wresp = await fetch(
@@ -266,12 +271,12 @@ async function renderClickData(lat, lng, map) {
 
     const wdata = await wresp.json();
 
-    // update big weather panel (if present)
+    // ---- BIG PANEL (your working weather table) ----
     if (typeof showWeather === "function") {
       showWeather(wdata);
     }
 
-    // update Calgary mini-panel weather
+    // ---- CALGARY MINI PANEL ----
     if (window.updateMiniWeather) {
       window.updateMiniWeather(wdata);
     }
@@ -287,5 +292,3 @@ async function renderClickData(lat, lng, map) {
     showPurpleAir(lat, lng);
   }
 }
-
-
