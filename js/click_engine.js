@@ -1,6 +1,13 @@
+// =========================================================
+// THIS BELONGS IN:  js/click_engine.js
+// REPLACE YOUR EXISTING renderClickData WITH THIS ONE
+// =========================================================
+
 async function renderClickData(lat, lng, map) {
 
-  // 1) Marker at clicked point
+  // --------------------------------------------------
+  // 1) MARK CLICK LOCATION
+  // --------------------------------------------------
   const marker = L.marker([lat, lng]);
   markerGroup.addLayer(marker);
   existingMarkers.push(marker);
@@ -10,7 +17,9 @@ async function renderClickData(lat, lng, map) {
     { sticky: true, direction: "top", opacity: 0.9 }
   ).openTooltip();
 
-  // ---------- FIND 2 CLOSEST AQHI STATIONS ----------
+  // --------------------------------------------------
+  // 2) FIND 2 CLOSEST AQHI STATIONS
+  // --------------------------------------------------
   const closest = Object.values(dataByStation)
     .map(arr => {
       const aqhiObj = arr.find(d => d.ParameterName === "AQHI");
@@ -56,7 +65,9 @@ async function renderClickData(lat, lng, map) {
     circle.bindPopup(popupHtml, { maxWidth: 300 });
   });
 
-  // ---------- WEATHER (RUN ONCE, AFTER STATIONS) ----------
+  // --------------------------------------------------
+  // 3) WEATHER — ONE CLEAN FETCH
+  // --------------------------------------------------
   try {
     const wresp = await fetch(
       `https://api.open-meteo.com/v1/forecast?` +
@@ -66,19 +77,34 @@ async function renderClickData(lat, lng, map) {
       `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
     );
 
-    const wdata = await wresp.json();   // 👈 THIS WAS MISSING
+    const wdata = await wresp.json();
 
     console.log("Weather for click:", wdata);
 
-    // Update the Calgary panel mini-weather box
+    // 👉 Update BIG weather panel (your working one in weather.js)
+    if (typeof showWeather === "function") {
+      showWeather(wdata);
+    }
+
+    // 👉 Update Calgary mini-panel (if it exists)
     if (window.updateMiniWeather) {
       window.updateMiniWeather(wdata);
     }
 
   } catch (err) {
-    console.error("Error fetching weather data", err);
+    console.error("Weather error:", err);
   }
 
-  // ---------- PURPLEAIR (RUN LAST) ----------
-  showPurpleAir(lat, lng);
+  // --------------------------------------------------
+  // 4) PURPLEAIR — SAFE (WON'T CRASH)
+  // --------------------------------------------------
+  try {
+    if (typeof showPurpleAir === "function") {
+      showPurpleAir(lat, lng);
+    } else {
+      console.warn("showPurpleAir() not available — skipping PurpleAir.");
+    }
+  } catch (err) {
+    console.error("PurpleAir error:", err);
+  }
 }
