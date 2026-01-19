@@ -35,32 +35,44 @@ const parseFc = txt =>
 // --------------------------------------------------------
 // LOAD DATA (OBS + FORECAST)
 // --------------------------------------------------------
+
 async function loadCalgaryAQHI() {
 
-  const [obs, fc] = await Promise.all([
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.json")
+  const [obsGeo, fcGeo] = await Promise.all([
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson")
       .then(r => r.json()),
 
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.json")
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.geojson")
       .then(r => r.json())
   ]);
+
+  // --- Extract features ---
+  const obs = obsGeo.features.map(f => f.properties);
+  const fc  = fcGeo.features.map(f => f.properties);
 
   // ---- FILTER CALGARY (case-insensitive) ----
   const obsCal = obs.filter(d => /calgary/i.test(d.name || d.station));
   const fcCal  = fc.filter(d => /calgary/i.test(d.name || d.station));
 
   // newest first
-  obsCal.sort((a,b) => new Date(b.time || b.forecast_datetime) -
-                       new Date(a.time || a.forecast_datetime));
-  fcCal.sort((a,b) => new Date(b.forecast_datetime) -
-                      new Date(a.forecast_datetime));
+  obsCal.sort((a,b) =>
+    new Date(b.time || b.forecast_datetime) -
+    new Date(a.time || a.forecast_datetime)
+  );
 
-  // ---- STORE CURRENT ----
-  calgaryAQHI.current = obsCal[0] ? {
-    station: obsCal[0].name || obsCal[0].station,
-    value: Math.round(Number(obsCal[0].aqhi || obsCal[0].value)),
-    time: obsCal[0].time || obsCal[0].forecast_datetime
-  } : null;
+  fcCal.sort((a,b) =>
+    new Date(b.forecast_datetime) -
+    new Date(a.forecast_datetime)
+  );
+
+  // ---- STORE CURRENT (integer) ----
+  calgaryAQHI.current = obsCal[0]
+    ? {
+        station: obsCal[0].name || obsCal[0].station,
+        value: Math.round(Number(obsCal[0].aqhi || obsCal[0].value)),
+        time: obsCal[0].time || obsCal[0].forecast_datetime
+      }
+    : null;
 
   // ---- STORE FORECAST (single row) ----
   if (fcCal.length > 0) {
@@ -70,11 +82,11 @@ async function loadCalgaryAQHI() {
       p3: Math.round(Number(fcCal[0].p3_aqhi ?? fcCal[0].p3))
     };
   } else {
-    console.warn("No Calgary forecast found in JSON");
+    console.warn("No Calgary forecast found in GeoJSON");
     calgaryAQHI.forecast = { p1:null, p2:null, p3:null };
   }
 
-  console.log("Calgary AQHI loaded (JSON):", calgaryAQHI);
+  console.log("Calgary AQHI loaded (GEOJSON):", calgaryAQHI);
 }
 
 
