@@ -1,41 +1,52 @@
 // ========================================================
-// CALGARY AQHI PANEL — CLEAN WORKING VERSION (FIXED)
+// CALGARY AQHI PANEL — CORRECT VERSION (GEOJSON + LABEL AWARE)
 // ========================================================
 
 let calgaryAQHI = {
-  current: null,   // { station, value, time }
-  forecast: null   // { p1, p2, p3, time }
+  current: null,
+  forecast: null   // keep FULL properties object
 };
 
 // --------------------------------------------------------
-// SHARED PARSERS (DEFINED ONCE — OUTSIDE FUNCTION)
+// HELPER: same logic as CAN_AQHI map
 // --------------------------------------------------------
-const parseObs = txt =>
-  txt.trim().split("\n").slice(1).map(r => {
-    const cols = r.split(",");
-    return {
-      station: cols[1],
-      value: Math.round(Number(cols[3])), // FORCE INTEGER
-      time: cols[4]
-    };
-  });
+function pickPeriodIndexByCategory(p, category){
+  const labels = [];
+  for (let i=1;i<=5;i++){
+    const lbl = (p[`p${i}_label`] || '').toString().toLowerCase();
+    labels.push(lbl);
+  }
 
-const parseFc = txt =>
-  txt.trim().split("\n").slice(1).map(r => {
-    const cols = r.split(",");
-    return {
-      station: cols[1],
-      p1: Math.round(Number(cols[9])),
-      p2: Math.round(Number(cols[11])),
-      p3: Math.round(Number(cols[13])),
-      time: cols[4]
-    };
-  });
+  const has = (i, s) => labels[i-1].includes(s);
+
+  const isToday = i =>
+    has(i,'today') || has(i,'this afternoon') || has(i,'this morning');
+
+  const isTonight = i =>
+    has(i,'tonight') || has(i,'overnight');
+
+  const isTomorrow = i =>
+    has(i,'tomorrow') && !has(i,'night');
+
+  const isTomorrowNight = i =>
+    has(i,'tomorrow night') || has(i,'tomorrow evening');
+
+  let test;
+  if (category==='today') test = isToday;
+  else if (category==='tonight') test = isTonight;
+  else if (category==='tomorrow') test = isTomorrow;
+  else if (category==='tomorrow_night') test = isTomorrowNight;
+
+  if (test){
+    for (let i=1;i<=5;i++) if (test(i)) return i;
+  }
+
+  return 1; // safe fallback
+}
 
 // --------------------------------------------------------
-// LOAD DATA (OBS + FORECAST)
+// LOAD DATA (OBS + FORECAST) — CORRECT GEOJSON
 // --------------------------------------------------------
-
 async function loadCalgaryAQHI() {
 
   const [obs, fc] = await Promise.all([
@@ -46,61 +57,60 @@ async function loadCalgaryAQHI() {
       .then(r => r.json())
   ]);
 
-  // GeoJSON lives inside .features
-  const obsCal = obs.features
-    .map(f => f.properties)
-    .filter(d => /calgary/i.test(d.name || d.station));
+  // Extract features
+  const obsFeats = obs.features || [];
+  const fcFeats  = fc.features  || [];
 
-  const fcCal = fc.features
+  // Filter Calgary
+  const obsCal = obsFeats
     .map(f => f.properties)
-    .filter(d => /calgary/i.test(d.name || d.station));
+    .filter(p => /calgary/i.test(p.name));
 
-  // newest first
+  const fcCal = fcFeats
+    .map(f => f.properties)
+    .filter(p => /calgary/i.test(p.name));
+
+  // Sort newest first
   obsCal.sort((a,b) =>
-    new Date(b.time) - new Date(a.time)
+    new Date(b.observed || b.observation_datetime) -
+    new Date(a.observed || a.observation_datetime)
   );
 
   fcCal.sort((a,b) =>
-    new Date(b.forecast_datetime) - new Date(a.forecast_datetime)
+    new Date(b.forecast_datetime) -
+    new Date(a.forecast_datetime)
   );
 
-  // ---- STORE CURRENT ----
-  calgaryAQHI.current = obsCal.length
-    ? {
-        station: obsCal[0].name,
-        value: Math.round(Number(obsCal[0].aqhi)),
-        time: obsCal[0].time
-      }
-    : null;
+  // Store current
+  calgaryAQHI.current = obsCal.length ? {
+    station: obsCal[0].name,
+    value: Math.round(Number(obsCal[0].aqhi)),
+    time: obsCal[0].observed || obsCal[0].observation_datetime
+  } : null;
 
-  // ---- STORE FORECAST ----
-  if (fcCal.length > 0) {
-    calgaryAQHI.forecast = {
-      p1: Math.round(Number(fcCal[0].p1_aqhi)),
-      p2: Math.round(Number(fcCal[0].p2_aqhi)),
-      p3: Math.round(Number(fcCal[0].p3_aqhi))
-    };
-  } else {
-    console.warn("No Calgary forecast found in GeoJSON");
-    calgaryAQHI.forecast = { p1:null, p2:null, p3:null };
-  }
+  // Store FULL forecast properties (critical)
+  calgaryAQHI.forecast = fcCal.length ? fcCal[0] : null;
 
   console.log("Calgary AQHI loaded (GeoJSON):", calgaryAQHI);
 }
 
-
-
 // --------------------------------------------------------
-// DRAW PANEL (NO ICONS, NO JUNK TEXT)
+// DRAW PANEL — NO ICONS, CLEAN LAYOUT
 // --------------------------------------------------------
 function drawCalgaryPanel() {
 
   if (!calgaryAQHI.current) return;
 
   const v0 = calgaryAQHI.current.value;
-  const f1 = calgaryAQHI.forecast?.p1;
-  const f2 = calgaryAQHI.forecast?.p2;
-  const f3 = calgaryAQHI.forecast?.p3;
+  const p  = calgaryAQHI.forecast;
+
+  const todayIdx = p ? pickPeriodIndexByCategory(p,"today") : 1;
+  const tonightIdx = p ? pickPeriodIndexByCategory(p,"tonight") : 1;
+  const tomorrowIdx = p ? pickPeriodIndexByCategory(p,"tomorrow") : 1;
+
+  const fToday    = p ? Math.round(Number(p[`p${todayIdx}_aqhi`])) : null;
+  const fTonight  = p ? Math.round(Number(p[`p${tonightIdx}_aqhi`])) : null;
+  const fTomorrow = p ? Math.round(Number(p[`p${tomorrowIdx}_aqhi`])) : null;
 
   const html = `
   <div id="calgary-panel" style="
@@ -121,114 +131,59 @@ function drawCalgaryPanel() {
     Calgary Air Quality (AQHI)
   </div>
 
-  <div style="
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:6px;
-      margin-top:10px;
-  ">
+  <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:10px;">
 
     <div style="text-align:center;">
-      <div style="
-           background:${getColor(v0)};
-           width:60px;
-           height:40px;
-           margin:auto;
-           display:flex;
-           align-items:center;
-           justify-content:center;
-           color:black;
-           font-weight:bold;
-           border:1px solid #333;">
+      <div style="background:${getColor(v0)}; width:60px; height:40px;
+           margin:auto; display:flex; align-items:center; justify-content:center;
+           font-weight:bold; border:1px solid #333;">
         ${v0}
       </div>
       <div style="font-size:12px;">Current</div>
     </div>
 
     <div style="text-align:center;">
-      <div style="
-           background:${getColor(f1)};
-           width:60px;
-           height:40px;
-           margin:auto;
-           display:flex;
-           align-items:center;
-           justify-content:center;
-           color:black;
-           font-weight:bold;
-           border:1px solid #333;">
-        ${f1 ?? "–"}
+      <div style="background:${getColor(fToday)}; width:60px; height:40px;
+           margin:auto; display:flex; align-items:center; justify-content:center;
+           font-weight:bold; border:1px solid #333;">
+        ${fToday ?? "–"}
+      </div>
+      <div style="font-size:12px;">Today</div>
+    </div>
+
+    <div style="text-align:center;">
+      <div style="background:${getColor(fTonight)}; width:60px; height:40px;
+           margin:auto; display:flex; align-items:center; justify-content:center;
+           font-weight:bold; border:1px solid #333;">
+        ${fTonight ?? "–"}
       </div>
       <div style="font-size:12px;">Tonight</div>
     </div>
 
     <div style="text-align:center;">
-      <div style="
-           background:${getColor(f2)};
-           width:60px;
-           height:40px;
-           margin:auto;
-           display:flex;
-           align-items:center;
-           justify-content:center;
-           color:black;
-           font-weight:bold;
-           border:1px solid #333;">
-        ${f2 ?? "–"}
-      </div>
-      <div style="font-size:12px;">Evening</div>
-    </div>
-
-    <div style="text-align:center;">
-      <div style="
-           background:${getColor(f3)};
-           width:60px;
-           height:40px;
-           margin:auto;
-           display:flex;
-           align-items:center;
-           justify-content:center;
-           color:black;
-           font-weight:bold;
-           border:1px solid #333;">
-        ${f3 ?? "–"}
+      <div style="background:${getColor(fTomorrow)}; width:60px; height:40px;
+           margin:auto; display:flex; align-items:center; justify-content:center;
+           font-weight:bold; border:1px solid #333;">
+        ${fTomorrow ?? "–"}
       </div>
       <div style="font-size:12px;">Tomorrow</div>
     </div>
 
   </div>
 
-  <div style="margin-top:10px; font-weight:600;">
-    Local forecast (next hour)
+  <div id="mini-weather"
+       style="position: fixed;
+              bottom: 15px;
+              left: 15px;
+              background: white;
+              padding: 8px;
+              border-radius: 6px;
+              border: 1px solid #999;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+              font-size: 12px;
+              max-width: 220px;
+              z-index: 9999;">
   </div>
-
-
-  <div id="mini-weather" style="
-     position: fixed;
-     bottom: 15px;
-     left: 15px;
-     background: white;
-     padding: 8px;
-     border-radius: 6px;
-     border: 1px solid #999;
-     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-     font-size: 12px;
-     max-width: 220px;
-     z-index: 9999;
-  "></div>
-    
-
-  <div style="margin-top:10px;">
-    <div style="font-weight:600;">External Resources</div>
-    <a href="https://firesmoke.ca/forecasts/current/" target="_blank">
-      FireSmoke Canada – Current Forecast
-    </a><br>
-    <a href="https://eer.cmc.ec.gc.ca/mandats/AutoSim/ops/Fire_CA_HRDPS_CWFIS/latest/Canada/latest/img/Canada/anim.html"
-       target="_blank">
-      ECCC Fire & Smoke HRDPS Animation
-    </a>
-  </div>
-
   </div>
   `;
 
@@ -237,7 +192,7 @@ function drawCalgaryPanel() {
 }
 
 // --------------------------------------------------------
-// AUTO RUN
+// AUTO-RUN
 // --------------------------------------------------------
 loadCalgaryAQHI()
   .then(drawCalgaryPanel)
