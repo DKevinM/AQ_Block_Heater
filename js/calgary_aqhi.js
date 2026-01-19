@@ -1,55 +1,51 @@
-// ========================================================
-// CALGARY AQHI PANEL — CORRECT VERSION (GEOJSON + LABEL AWARE)
-// ========================================================
+// =========================================================
+// CALGARY AQHI PANEL — GEOJSON + PERIOD PICKING
+// =========================================================
 
 let calgaryAQHI = {
   current: null,
-  forecast: null   // keep FULL properties object
+  forecast: null
 };
 
-// --------------------------------------------------------
-// HELPER: same logic as CAN_AQHI map
-// --------------------------------------------------------
-function pickPeriodIndexByCategory(p, category){
+// ---------- HELPER: same logic as your CAN_AQHI map ----------
+function pickPeriodIndexByCategory(p, category) {
   const labels = [];
-  for (let i=1;i<=5;i++){
-    const lbl = (p[`p${i}_label`] || '').toString().toLowerCase();
+  for (let i = 1; i <= 5; i++) {
+    const lbl = (p[`p${i}_label`] || "").toString().toLowerCase();
     labels.push(lbl);
   }
 
-  const has = (i, s) => labels[i-1].includes(s);
+  const has = (i, s) => labels[i - 1].includes(s);
 
   const isToday = i =>
-    has(i,'today') || has(i,'this afternoon') || has(i,'this morning');
+    has(i, "today") ||
+    has(i, "this afternoon") ||
+    (has(i, "this evening") && !has(i, "tonight"));
 
   const isTonight = i =>
-    has(i,'tonight') || has(i,'overnight');
+    has(i, "tonight") || has(i, "overnight");
 
   const isTomorrow = i =>
-    has(i,'tomorrow') && !has(i,'night');
-
-  const isTomorrowNight = i =>
-    has(i,'tomorrow night') || has(i,'tomorrow evening');
+    has(i, "tomorrow") && !has(i, "night");
 
   let test;
-  if (category==='today') test = isToday;
-  else if (category==='tonight') test = isTonight;
-  else if (category==='tomorrow') test = isTomorrow;
-  else if (category==='tomorrow_night') test = isTomorrowNight;
+  if (category === "today") test = isToday;
+  else if (category === "tonight") test = isTonight;
+  else if (category === "tomorrow") test = isTomorrow;
 
-  if (test){
-    for (let i=1;i<=5;i++) if (test(i)) return i;
+  if (test) {
+    for (let i = 1; i <= 5; i++) if (test(i)) return i;
   }
 
-  return 1; // safe fallback
+  // fallback
+  const fallback = { today: 1, tonight: 2, tomorrow: 3 };
+  return fallback[category] || 1;
 }
 
-
 // --------------------------------------------------------
-// LOAD DATA (OBS + FORECAST) — CORRECT GEOJSON + MAPPED PERIODS
+// LOAD DATA (OBS + FORECAST) — GEOJSON
 // --------------------------------------------------------
 async function loadCalgaryAQHI() {
-
   const [obs, fc] = await Promise.all([
     fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson")
       .then(r => r.json()),
@@ -59,48 +55,8 @@ async function loadCalgaryAQHI() {
   ]);
 
   const obsFeats = obs.features || [];
-  const fcFeats  = fc.features  || [];
+  const fcFeats = fc.features || [];
 
-  // ---- HELPER: pick correct period from labels ----
-  function pickPeriodIndexByCategory(p, category){
-    const labels = [];
-    for (let i=1;i<=5;i++){
-      labels.push(((p[`p${i}_label`] || "") + "").toLowerCase());
-    }
-    const has = (i, s) => labels[i-1].includes(s);
-
-    const isToday = i =>
-      has(i,"today") ||
-      has(i,"this morning") ||
-      has(i,"this afternoon") ||
-      (has(i,"this evening") && !has(i,"tonight"));
-
-    const isTonight = i =>
-      has(i,"tonight") || has(i,"overnight") || has(i,"this night");
-
-    const isTomorrow = i =>
-      (has(i,"tomorrow") && !has(i,"night")) ||
-      has(i,"tomorrow daytime") ||
-      has(i,"tomorrow afternoon") ||
-      has(i,"tomorrow morning");
-
-    let test;
-    if (category === "today") test = isToday;
-    if (category === "tonight") test = isTonight;
-    if (category === "tomorrow") test = isTomorrow;
-
-    if (test){
-      for (let i=1;i<=5;i++){
-        if (test(i)) return i;
-      }
-    }
-
-    // fallback if labels are weird
-    const fallback = { today:1, tonight:2, tomorrow:3 };
-    return fallback[category] || 1;
-  }
-
-  // ---- FILTER CALGARY ----
   const obsCal = obsFeats
     .map(f => f.properties)
     .filter(p => /calgary/i.test(p.name));
@@ -109,64 +65,45 @@ async function loadCalgaryAQHI() {
     .map(f => f.properties)
     .filter(p => /calgary/i.test(p.name));
 
-  // ---- SORT newest first ----
-  obsCal.sort((a,b) =>
+  // newest first
+  obsCal.sort((a, b) =>
     new Date(b.observed || b.observation_datetime) -
     new Date(a.observed || a.observation_datetime)
   );
 
-  fcCal.sort((a,b) =>
+  fcCal.sort((a, b) =>
     new Date(b.forecast_datetime) -
     new Date(a.forecast_datetime)
   );
 
-  // ---- STORE CURRENT ----
-  calgaryAQHI.current = obsCal.length ? {
-    station: obsCal[0].name,
-    value: Math.round(Number(obsCal[0].aqhi)),
-    time: obsCal[0].observed || obsCal[0].observation_datetime
-  } : null;
+  calgaryAQHI.current = obsCal.length
+    ? {
+        station: obsCal[0].name,
+        value: Math.round(Number(obsCal[0].aqhi)),
+        time: obsCal[0].observed || obsCal[0].observation_datetime
+      }
+    : null;
 
-  // ---- STORE FORECAST (MAPPED BY LABELS) ----
-  if (fcCal.length) {
-    const p = fcCal[0];   // newest Calgary forecast
+  calgaryAQHI.forecast = fcCal.length ? fcCal[0] : null;
 
-    const iToday   = pickPeriodIndexByCategory(p, "today");
-    const iTonight = pickPeriodIndexByCategory(p, "tonight");
-    const iTomorrow= pickPeriodIndexByCategory(p, "tomorrow");
-
-    calgaryAQHI.forecast = {
-      today:   Math.round(Number(p[`p${iToday}_aqhi`])),
-      tonight:  Math.round(Number(p[`p${iTonight}_aqhi`])),
-      tomorrow: Math.round(Number(p[`p${iTomorrow}_aqhi`])),
-      raw: p   // keep raw properties for debugging
-    };
-
-  } else {
-    calgaryAQHI.forecast = null;
-  }
-
-  console.log("Calgary AQHI loaded (GeoJSON):", calgaryAQHI);
+  console.log("Calgary AQHI loaded:", calgaryAQHI);
 }
 
-
 // --------------------------------------------------------
-// DRAW PANEL — FIXED TO MATCH NEW FORECAST STRUCTURE
+// DRAW PANEL — FORECAST + MINI WEATHER STACKED UNDER
 // --------------------------------------------------------
-
 function drawCalgaryPanel() {
-
   if (!calgaryAQHI.current) return;
 
   const v0 = calgaryAQHI.current.value;
-  const p  = calgaryAQHI.forecast;
+  const p = calgaryAQHI.forecast;
 
-  const todayIdx = p ? pickPeriodIndexByCategory(p,"today") : 1;
-  const tonightIdx = p ? pickPeriodIndexByCategory(p,"tonight") : 1;
-  const tomorrowIdx = p ? pickPeriodIndexByCategory(p,"tomorrow") : 1;
+  const todayIdx = p ? pickPeriodIndexByCategory(p, "today") : 1;
+  const tonightIdx = p ? pickPeriodIndexByCategory(p, "tonight") : 1;
+  const tomorrowIdx = p ? pickPeriodIndexByCategory(p, "tomorrow") : 1;
 
-  const fToday    = p ? Math.round(Number(p[`p${todayIdx}_aqhi`])) : null;
-  const fTonight  = p ? Math.round(Number(p[`p${tonightIdx}_aqhi`])) : null;
+  const fToday = p ? Math.round(Number(p[`p${todayIdx}_aqhi`])) : null;
+  const fTonight = p ? Math.round(Number(p[`p${tonightIdx}_aqhi`])) : null;
   const fTomorrow = p ? Math.round(Number(p[`p${tomorrowIdx}_aqhi`])) : null;
 
   const html = `
@@ -225,39 +162,28 @@ function drawCalgaryPanel() {
       </div>
       <div style="font-size:12px;">Tomorrow</div>
     </div>
-
   </div>
 
-  <!-- ===== STACKED MINI-WEATHER (INSIDE PANEL) ===== -->
-  <div style="margin-top:12px; font-weight:700;">
-    Local weather (next 6 hours)
+  <div style="margin-top:12px; font-weight:600;">
+    Weather (next 6 hours)
   </div>
 
   <div id="mini-weather"
        style="margin-top:6px;
-              background:#f7f7f7;
+              background:white;
               padding:8px;
               border-radius:6px;
-              border:1px solid #ddd;
+              border:1px solid #999;
               font-size:12px;">
   </div>
 
-  <!-- ===== LINKS YOU WANTED BACK ===== -->
-  <div style="margin-top:12px; font-size:12px;">
-    <div style="font-weight:700;">Wildfire & Smoke</div>
+  <div style="margin-top:10px;">
+    <div style="font-weight:600;">Wildfire & Smoke</div>
     <a href="https://firesmoke.ca/forecasts/current/" target="_blank">
-      FireSmoke Canada — Current Forecast
+      FireSmoke Canada – Current Forecast
     </a><br>
-    <a href="https://eer.cmc.ec.gc.ca/mandats/AutoSim/ops/Fire_CA_HRDPS_CWFIS/latest/Canada/latest/img/Canada/anim.html"
-       target="_blank">
-      ECCC Fire & Smoke (HRDPS animation)
-    </a>
-  </div>
-
-  <div style="margin-top:8px; font-size:12px;">
-    <div style="font-weight:700;">Block Heater / Venue</div>
-    <a href="https://dkevinm.github.io/AQ_Block_Heater/" target="_blank">
-      AQ Block Heater Map
+    <a href="https://weather.gc.ca/firework/index_e.html" target="_blank">
+      ECCC Wildfire Dashboard
     </a>
   </div>
 
@@ -268,18 +194,12 @@ function drawCalgaryPanel() {
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
-
-
-// --------------------------------------------------------
-// AUTO-RUN
-// --------------------------------------------------------
+// auto-run
 loadCalgaryAQHI()
   .then(drawCalgaryPanel)
   .catch(err => console.error("Calgary AQHI failed:", err));
 
-window.refreshCalgaryPanel = async function() {
+window.refreshCalgaryPanel = async function () {
   await loadCalgaryAQHI();
   drawCalgaryPanel();
 };
-
-console.log("Calgary module ready.");
