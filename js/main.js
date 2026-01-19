@@ -44,29 +44,25 @@ let stationMarkers = [];
 
 
 
-
 window.updateMiniWeather = function(w) {
 
   const el = document.getElementById("mini-weather");
+  if (!el) return;
 
-  if (!el) {
-    console.warn("mini-weather div not found in DOM");
-    return;
-  }
-
-  const t  = Math.round(w.hourly.temperature_2m[0]);
+  const t = Math.round(w.hourly.temperature_2m[0]);
   const ws = Math.round(w.hourly.wind_speed_10m[0]);
   const uv = Math.round(w.hourly.uv_index[0]);
-  const rain = Number(w.hourly.rain[0] || 0).toFixed(1);
+  const rain = w.hourly.rain[0].toFixed(1);
 
   el.innerHTML = `
-    <strong>Local Weather (Next Hour)</strong><br>
+    <strong>Local Weather</strong><br>
     Temp: ${t}°C<br>
     Wind: ${ws} km/h<br>
     UV: ${uv}<br>
     Rain: ${rain} mm
   `;
 };
+
 
 
 
