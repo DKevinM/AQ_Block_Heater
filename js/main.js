@@ -49,19 +49,63 @@ window.updateMiniWeather = function(w) {
   const el = document.getElementById("mini-weather");
   if (!el) return;
 
-  const t = Math.round(w.hourly.temperature_2m[0]);
-  const ws = Math.round(w.hourly.wind_speed_10m[0]);
-  const uv = Math.round(w.hourly.uv_index[0]);
-  const rain = w.hourly.rain[0].toFixed(1);
+  // ----- CURRENT CONDITIONS (top) -----
+  const t0  = Math.round(w.hourly.temperature_2m[0]);
+  const ws0 = Math.round(w.hourly.wind_speed_10m[0]);
+  const uv0 = Math.round(w.hourly.uv_index[0]);
+  const rain0 = w.hourly.rain[0].toFixed(1);
 
+  // ----- BUILD 6-HOUR FORECAST TABLE (compact) -----
+  let forecastRows = "";
+
+  for (let i = 1; i <= 6; i++) {
+    const time = w.hourly.time[i].slice(11,16); // HH:MM
+    const temp = Math.round(w.hourly.temperature_2m[i]);
+    const wind = Math.round(w.hourly.wind_speed_10m[i]);
+    const rain = w.hourly.rain[i].toFixed(1);
+
+    forecastRows += `
+      <tr>
+        <td>${time}</td>
+        <td>${temp}°C</td>
+        <td>${wind} km/h</td>
+        <td>${rain} mm</td>
+      </tr>
+    `;
+  }
+
+  // ----- WRITE TO MINI PANEL (BOTTOM LEFT) -----
   el.innerHTML = `
-    <strong>Local Weather</strong><br>
-    Temp: ${t}°C<br>
-    Wind: ${ws} km/h<br>
-    UV: ${uv}<br>
-    Rain: ${rain} mm
+  <div style="font-weight:600; margin-bottom:6px;">Current Weather</div>
+  <div style="line-height:1.3;">
+    Temp: ${t0}°C<br>
+    Wind: ${ws0} km/h<br>
+    UV: ${uv0}<br>
+    Rain: ${rain0} mm
+  </div>
+
+  <hr style="margin:6px 0;">
+
+  <div style="font-weight:600; margin-bottom:4px;">
+    Next 6 hours
+  </div>
+
+  <table style="font-size:11px; width:100%; border-collapse: collapse;">
+    <thead>
+      <tr style="border-bottom:1px solid #ccc;">
+        <th style="text-align:left;">Time</th>
+        <th style="text-align:left;">Temp</th>
+        <th style="text-align:left;">Wind</th>
+        <th style="text-align:left;">Rain</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${forecastRows}
+    </tbody>
+  </table>
   `;
 };
+
 
 
 
