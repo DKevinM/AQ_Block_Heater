@@ -151,22 +151,18 @@ async function loadCalgaryAQHI() {
 
 
 // --------------------------------------------------------
-// DRAW PANEL — NO ICONS, CLEAN LAYOUT
+// DRAW PANEL — FIXED TO MATCH NEW FORECAST STRUCTURE
 // --------------------------------------------------------
 function drawCalgaryPanel() {
 
   if (!calgaryAQHI.current) return;
 
   const v0 = calgaryAQHI.current.value;
-  const p  = calgaryAQHI.forecast;
 
-  const todayIdx = p ? pickPeriodIndexByCategory(p,"today") : 1;
-  const tonightIdx = p ? pickPeriodIndexByCategory(p,"tonight") : 1;
-  const tomorrowIdx = p ? pickPeriodIndexByCategory(p,"tomorrow") : 1;
-
-  const fToday    = p ? Math.round(Number(p[`p${todayIdx}_aqhi`])) : null;
-  const fTonight  = p ? Math.round(Number(p[`p${tonightIdx}_aqhi`])) : null;
-  const fTomorrow = p ? Math.round(Number(p[`p${tomorrowIdx}_aqhi`])) : null;
+  // THESE NOW COME DIRECTLY FROM YOUR LOADER
+  const fToday    = calgaryAQHI.forecast?.today ?? null;
+  const fTonight  = calgaryAQHI.forecast?.tonight ?? null;
+  const fTomorrow = calgaryAQHI.forecast?.tomorrow ?? null;
 
   const html = `
   <div id="calgary-panel" style="
@@ -246,6 +242,7 @@ function drawCalgaryPanel() {
   document.getElementById("calgary-panel")?.remove();
   document.body.insertAdjacentHTML("beforeend", html);
 }
+
 
 // --------------------------------------------------------
 // AUTO-RUN
