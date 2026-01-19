@@ -153,16 +153,21 @@ async function loadCalgaryAQHI() {
 // --------------------------------------------------------
 // DRAW PANEL — FIXED TO MATCH NEW FORECAST STRUCTURE
 // --------------------------------------------------------
+
 function drawCalgaryPanel() {
 
   if (!calgaryAQHI.current) return;
 
   const v0 = calgaryAQHI.current.value;
+  const p  = calgaryAQHI.forecast;
 
-  // THESE NOW COME DIRECTLY FROM YOUR LOADER
-  const fToday    = calgaryAQHI.forecast?.today ?? null;
-  const fTonight  = calgaryAQHI.forecast?.tonight ?? null;
-  const fTomorrow = calgaryAQHI.forecast?.tomorrow ?? null;
+  const todayIdx = p ? pickPeriodIndexByCategory(p,"today") : 1;
+  const tonightIdx = p ? pickPeriodIndexByCategory(p,"tonight") : 1;
+  const tomorrowIdx = p ? pickPeriodIndexByCategory(p,"tomorrow") : 1;
+
+  const fToday    = p ? Math.round(Number(p[`p${todayIdx}_aqhi`])) : null;
+  const fTonight  = p ? Math.round(Number(p[`p${tonightIdx}_aqhi`])) : null;
+  const fTomorrow = p ? Math.round(Number(p[`p${tomorrowIdx}_aqhi`])) : null;
 
   const html = `
   <div id="calgary-panel" style="
@@ -223,25 +228,46 @@ function drawCalgaryPanel() {
 
   </div>
 
-  <div id="mini-weather"
-       style="position: fixed;
-              bottom: 15px;
-              left: 15px;
-              background: white;
-              padding: 8px;
-              border-radius: 6px;
-              border: 1px solid #999;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-              font-size: 12px;
-              max-width: 220px;
-              z-index: 9999;">
+  <!-- ===== STACKED MINI-WEATHER (INSIDE PANEL) ===== -->
+  <div style="margin-top:12px; font-weight:700;">
+    Local weather (next 6 hours)
   </div>
+
+  <div id="mini-weather"
+       style="margin-top:6px;
+              background:#f7f7f7;
+              padding:8px;
+              border-radius:6px;
+              border:1px solid #ddd;
+              font-size:12px;">
+  </div>
+
+  <!-- ===== LINKS YOU WANTED BACK ===== -->
+  <div style="margin-top:12px; font-size:12px;">
+    <div style="font-weight:700;">Wildfire & Smoke</div>
+    <a href="https://firesmoke.ca/forecasts/current/" target="_blank">
+      FireSmoke Canada — Current Forecast
+    </a><br>
+    <a href="https://eer.cmc.ec.gc.ca/mandats/AutoSim/ops/Fire_CA_HRDPS_CWFIS/latest/Canada/latest/img/Canada/anim.html"
+       target="_blank">
+      ECCC Fire & Smoke (HRDPS animation)
+    </a>
+  </div>
+
+  <div style="margin-top:8px; font-size:12px;">
+    <div style="font-weight:700;">Block Heater / Venue</div>
+    <a href="https://dkevinm.github.io/AQ_Block_Heater/" target="_blank">
+      AQ Block Heater Map
+    </a>
+  </div>
+
   </div>
   `;
 
   document.getElementById("calgary-panel")?.remove();
   document.body.insertAdjacentHTML("beforeend", html);
 }
+
 
 
 // --------------------------------------------------------
