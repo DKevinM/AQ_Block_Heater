@@ -44,8 +44,9 @@ function pickPeriodIndexByCategory(p, category){
   return 1; // safe fallback
 }
 
+
 // --------------------------------------------------------
-// LOAD DATA (OBS + FORECAST) — CORRECT GEOJSON
+// LOAD DATA (OBS + FORECAST) — CORRECT GEOJSON + MAPPED PERIODS
 // --------------------------------------------------------
 async function loadCalgaryAQHI() {
 
@@ -57,11 +58,49 @@ async function loadCalgaryAQHI() {
       .then(r => r.json())
   ]);
 
-  // Extract features
   const obsFeats = obs.features || [];
   const fcFeats  = fc.features  || [];
 
-  // Filter Calgary
+  // ---- HELPER: pick correct period from labels ----
+  function pickPeriodIndexByCategory(p, category){
+    const labels = [];
+    for (let i=1;i<=5;i++){
+      labels.push(((p[`p${i}_label`] || "") + "").toLowerCase());
+    }
+    const has = (i, s) => labels[i-1].includes(s);
+
+    const isToday = i =>
+      has(i,"today") ||
+      has(i,"this morning") ||
+      has(i,"this afternoon") ||
+      (has(i,"this evening") && !has(i,"tonight"));
+
+    const isTonight = i =>
+      has(i,"tonight") || has(i,"overnight") || has(i,"this night");
+
+    const isTomorrow = i =>
+      (has(i,"tomorrow") && !has(i,"night")) ||
+      has(i,"tomorrow daytime") ||
+      has(i,"tomorrow afternoon") ||
+      has(i,"tomorrow morning");
+
+    let test;
+    if (category === "today") test = isToday;
+    if (category === "tonight") test = isTonight;
+    if (category === "tomorrow") test = isTomorrow;
+
+    if (test){
+      for (let i=1;i<=5;i++){
+        if (test(i)) return i;
+      }
+    }
+
+    // fallback if labels are weird
+    const fallback = { today:1, tonight:2, tomorrow:3 };
+    return fallback[category] || 1;
+  }
+
+  // ---- FILTER CALGARY ----
   const obsCal = obsFeats
     .map(f => f.properties)
     .filter(p => /calgary/i.test(p.name));
@@ -70,7 +109,7 @@ async function loadCalgaryAQHI() {
     .map(f => f.properties)
     .filter(p => /calgary/i.test(p.name));
 
-  // Sort newest first
+  // ---- SORT newest first ----
   obsCal.sort((a,b) =>
     new Date(b.observed || b.observation_datetime) -
     new Date(a.observed || a.observation_datetime)
@@ -81,18 +120,35 @@ async function loadCalgaryAQHI() {
     new Date(a.forecast_datetime)
   );
 
-  // Store current
+  // ---- STORE CURRENT ----
   calgaryAQHI.current = obsCal.length ? {
     station: obsCal[0].name,
     value: Math.round(Number(obsCal[0].aqhi)),
     time: obsCal[0].observed || obsCal[0].observation_datetime
   } : null;
 
-  // Store FULL forecast properties (critical)
-  calgaryAQHI.forecast = fcCal.length ? fcCal[0] : null;
+  // ---- STORE FORECAST (MAPPED BY LABELS) ----
+  if (fcCal.length) {
+    const p = fcCal[0];   // newest Calgary forecast
+
+    const iToday   = pickPeriodIndexByCategory(p, "today");
+    const iTonight = pickPeriodIndexByCategory(p, "tonight");
+    const iTomorrow= pickPeriodIndexByCategory(p, "tomorrow");
+
+    calgaryAQHI.forecast = {
+      today:   Math.round(Number(p[`p${iToday}_aqhi`])),
+      tonight:  Math.round(Number(p[`p${iTonight}_aqhi`])),
+      tomorrow: Math.round(Number(p[`p${iTomorrow}_aqhi`])),
+      raw: p   // keep raw properties for debugging
+    };
+
+  } else {
+    calgaryAQHI.forecast = null;
+  }
 
   console.log("Calgary AQHI loaded (GeoJSON):", calgaryAQHI);
 }
+
 
 // --------------------------------------------------------
 // DRAW PANEL — NO ICONS, CLEAN LAYOUT
