@@ -78,15 +78,15 @@ async function renderClickData(lat, lng, map) {
     );
 
     const wdata = await wresp.json();
-
+    
     console.log("Weather for click:", wdata);
-
-    // 👉 Update BIG weather panel (your working one in weather.js)
+    
+    // 1) Update BIG weather panel (if present)
     if (typeof showWeather === "function") {
       showWeather(wdata);
     }
-
-    // 👉 Update Calgary mini-panel (if it exists)
+    
+    // 2) Update bottom-left mini weather box
     if (window.updateMiniWeather) {
       window.updateMiniWeather(wdata);
     }
