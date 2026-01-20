@@ -44,11 +44,7 @@ async function renderClickData(lat, lng, map) {
 
     const wdata = await wresp.json();
 
-    // Big panel
     if (typeof showWeather === "function") showWeather(wdata);
-
-    // Mini panel inside Calgary box
-    if (window.updateMiniWeather) window.updateMiniWeather(wdata);
 
   } catch (err) {
     console.error("Weather error:", err);
