@@ -1,11 +1,11 @@
 async function renderClickData(lat, lng, map) {
 
-  // 1) Marker at clicked point
+  // ---- 1) Marker at clicked point ----
   const marker = L.marker([lat, lng]);
   markerGroup.addLayer(marker);
   existingMarkers.push(marker);
 
-  // ---------- 2 CLOSEST AQHI STATIONS ----------
+  // ---- 2) TWO CLOSEST AQHI STATIONS ----
   const closestStations = Object.values(dataByStation)
     .map(arr => arr.find(d => d.ParameterName === "AQHI") || arr[0])
     .map(r => ({
@@ -15,6 +15,7 @@ async function renderClickData(lat, lng, map) {
       aqhi: (r.Value == null || r.Value === "" ? null : Math.round(Number(r.Value))),
       dist_km: getDistance(lat, lng, r.Latitude, r.Longitude) / 1000
     }))
+    .filter(s => isFinite(s.lat) && isFinite(s.lng))
     .sort((a,b) => a.dist_km - b.dist_km)
     .slice(0,2);
 
@@ -31,7 +32,7 @@ async function renderClickData(lat, lng, map) {
     stationMarkers.push(circle);
   });
 
-  // ---------- WEATHER (ONCE) ----------
+  // ---- 3) WEATHER (ONE CALL ONLY) ----
   try {
     const wresp = await fetch(
       `https://api.open-meteo.com/v1/forecast?` +
@@ -40,31 +41,36 @@ async function renderClickData(lat, lng, map) {
       `snowfall,cloudcover,uv_index,wind_speed_10m,wind_direction_10m,` +
       `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
     );
+
     const wdata = await wresp.json();
 
+    // Big panel
     if (typeof showWeather === "function") showWeather(wdata);
+
+    // Mini panel inside Calgary box
     if (window.updateMiniWeather) window.updateMiniWeather(wdata);
 
   } catch (err) {
     console.error("Weather error:", err);
   }
 
-  // ---------- 3 CLOSEST PURPLEAIR (SAFE + GENERIC) ----------
-  // This tries to use whatever your PurpleAir script exposes.
+  // ---- 4) THREE CLOSEST PURPLEAIR (FIXED DISTANCE LOGIC) ----
   let closestPA = [];
+
   try {
     if (typeof window.getClosestPurpleAir === "function") {
-      // if you already have a helper, use it
       closestPA = window.getClosestPurpleAir(lat, lng, 3) || [];
-    } else if (Array.isArray(window.purpleAirSensors)) {
-      // or use a global array if you store sensors there
+    }
+    else if (Array.isArray(window.purpleAirSensors)) {
       closestPA = window.purpleAirSensors
         .map(s => ({
           name: s.name || s.SensorName || s.Label || "PurpleAir",
           pm: s.pm25 ?? s.PM2_5 ?? s.pm2_5 ?? null,
           lat: Number(s.lat ?? s.Latitude),
           lng: Number(s.lng ?? s.Longitude),
-          dist_km: getDistance(lat, lng, s.lat ?? s.Latitude, s.lng ?? s.Longitude) / 1000
+          dist_km: getDistance(lat, lng,
+            s.lat ?? s.Latitude,
+            s.lng ?? s.Longitude) / 1000
         }))
         .filter(s => isFinite(s.lat) && isFinite(s.lng))
         .sort((a,b) => a.dist_km - b.dist_km)
@@ -74,12 +80,12 @@ async function renderClickData(lat, lng, map) {
     console.warn("PurpleAir nearest lookup failed:", e);
   }
 
-  // Keep your existing PurpleAir plotting if it exists
+  // Preserve your existing PurpleAir plotting
   if (typeof showPurpleAir === "function") {
     try { showPurpleAir(lat, lng); } catch (e) {}
   }
 
-  // ---------- CLICK POPUP TABLE ----------
+  // ---- 5) CLICK POPUP TABLE ----
   const stRows = closestStations.map(s => `
     <tr>
       <td>${s.station}</td>
@@ -88,10 +94,13 @@ async function renderClickData(lat, lng, map) {
     </tr>
   `).join("");
 
-  const paRows = (closestPA.length ? closestPA : [{name:"(PurpleAir not loaded)", pm:"—", dist_km:0}]).map(p => `
+  const paRows = (closestPA.length
+    ? closestPA
+    : [{name:"(PurpleAir not loaded)", pm:"—", dist_km:0}]
+  ).map(p => `
     <tr>
       <td>${p.name}</td>
-      <td>${(p.pm == null || p.pm === "" ? "—" : Number(p.pm).toFixed(1))}</td>
+      <td>${(p.pm == null ? "—" : Number(p.pm).toFixed(1))}</td>
       <td>${p.dist_km ? p.dist_km.toFixed(1)+" km" : ""}</td>
     </tr>
   `).join("");
