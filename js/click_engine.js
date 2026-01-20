@@ -1,18 +1,20 @@
 async function renderClickData(lat, lng, map) {
 
+
   function getPurpleAirList() {
-    // CASE 1 — your sensors are already in a Leaflet layer (most common)
     if (window.purpleAirLayer && window.purpleAirLayer.getLayers) {
       return window.purpleAirLayer.getLayers()
         .map(l => l.feature?.properties || {})
         .filter(p => p.Latitude && p.Longitude);
     }
-    // CASE 2 — fallback to array if you already have one
+  
     if (Array.isArray(window.purpleAirSensors)) {
       return window.purpleAirSensors;
     }
+  
     return [];
   }
+
 
 
   
@@ -67,7 +69,7 @@ async function renderClickData(lat, lng, map) {
 
 
 
-  // ---- 4) THREE CLOSEST PURPLEAIR (FIXED DISTANCE LOGIC) ----
+  // ---- 4) THREE CLOSEST PURPLEAIR (FIXED DISTANCE LOGIC) ---- 
   let closestPA = [];
   
   try {
@@ -91,10 +93,10 @@ async function renderClickData(lat, lng, map) {
     console.warn("PurpleAir nearest lookup failed:", e);
   }
   
-  // Keep your existing plotting (DO NOT REMOVE)
   if (typeof showPurpleAir === "function") {
     try { showPurpleAir(lat, lng); } catch (e) {}
   }
+
 
 
   // ---- 5) CLICK POPUP TABLE ----
