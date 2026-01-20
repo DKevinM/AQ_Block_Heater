@@ -4,7 +4,7 @@ function degToCardinal(deg) {
   return dirs[idx];
 }
 
-function showWeather(data) {
+function updateMiniWeather(data) {
 
   const now = new Date();
   let i = 0;
@@ -15,58 +15,46 @@ function showWeather(data) {
     i++;
   }
 
-  const get = f => data.hourly[f][i];
-
-  const currentRows = `
-    <tr><td><strong>Time</strong></td>
-        <td>${now.toLocaleString('en-CA',{timeZone:'America/Edmonton'})}</td></tr>
-
-    <tr><td><strong>Temperature</strong></td>
-        <td>${get("temperature_2m")} °C</td></tr>
-
-    <tr><td><strong>Humidity</strong></td>
-        <td>${get("relative_humidity_2m")} %</td></tr>
-
-    <tr><td><strong>Precipitation</strong></td>
-        <td>${get("precipitation")} mm</td></tr>
-
-    <tr><td><strong>Cloud</strong></td>
-        <td>${get("cloudcover")} %</td></tr>
-
-    <tr><td><strong>Wind</strong></td>
-        <td>${Math.round(get("wind_speed_10m"))} km/h
-            ${degToCardinal(get("wind_direction_10m"))}</td></tr>
-
-    <tr><td><strong>UV Index</strong></td>
-        <td>${Math.round(get("uv_index"))}</td></tr>
-  `;
+  const get = (field) => data.hourly[field][i];
 
   let forecastRows = "";
-  for (let j = 1; j <= 6; j++) {
-    const t = new Date(data.hourly.time[i+j]);
-    const hhmm = t.toLocaleTimeString("en-CA",
-      {hour:"2-digit", minute:"2-digit", timeZone:"America/Edmonton"});
+  for (let j = 0; j < 6; j++) {
+    const t = new Date(data.hourly.time[i + j]);
+    const hhmm = t.toLocaleTimeString("en-CA", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "America/Edmonton"
+    });
 
     forecastRows += `
       <tr>
         <td>${hhmm}</td>
         <td>${Math.round(data.hourly.temperature_2m[i+j])}°C</td>
-        <td>${Math.round(data.hourly.wind_speed_10m[i+j])} km/h</td>
+        <td>${Math.round(data.hourly.wind_speed_10m[i+j])}
+            ${degToCardinal(data.hourly.wind_direction_10m[i+j])}</td>
         <td>${data.hourly.precipitation[i+j].toFixed(1)} mm</td>
+        <td>${Math.round(data.hourly.uv_index[i+j])}</td>
       </tr>
     `;
   }
 
-  document.querySelector("#weather-info").innerHTML = `
-    <h4 style="margin:0;">Current Weather</h4>
-    <table><tbody>${currentRows}</tbody></table>
-
-    <h4 style="margin-top:8px;">Next 6 Hours</h4>
-    <table>
+  const html = `
+    <table style="width:100%; font-size:12px;">
       <thead>
-        <tr><th>Time</th><th>Temp</th><th>Wind</th><th>Precip</th></tr>
+        <tr>
+          <th>Time</th>
+          <th>Temp</th>
+          <th>Wind</th>
+          <th>Precip</th>
+          <th>UV</th>
+        </tr>
       </thead>
-      <tbody>${forecastRows}</tbody>
+      <tbody>
+        ${forecastRows}
+      </tbody>
     </table>
   `;
+
+  const el = document.getElementById("mini-weather");
+  if (el) el.innerHTML = html;
 }
