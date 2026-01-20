@@ -18,7 +18,6 @@ function findNearestHourIndex(times) {
 function showWeather(data) {
 
   const i = findNearestHourIndex(data.hourly.time);
-
   const get = f => data.hourly[f][i];
 
   const currentRows = `
@@ -68,18 +67,14 @@ function showWeather(data) {
   if (document.getElementById("mini-weather")) {
     document.getElementById("mini-weather").innerHTML = `
       <table style="width:100%; font-size:12px;">
-        <tbody>
-          ${currentRows}
-        </tbody>
+        <tbody>${currentRows}</tbody>
       </table>
       <hr>
       <table style="width:100%; font-size:12px;">
         <thead>
           <tr><th>Time</th><th>Temp</th><th>Wind</th><th>Rain</th></tr>
         </thead>
-        <tbody>
-          ${forecastRows}
-        </tbody>
+        <tbody>${forecastRows}</tbody>
       </table>
     `;
   }
