@@ -1,11 +1,11 @@
 let calgaryAQHI = { current: null, forecast: null };
 
-function safeRound(v) {
-  const n = Number(v);
+function safeRound(val) {
+  if (val === null || val === undefined || val === "") return null;
+  const n = Number(val);
   return Number.isFinite(n) ? Math.round(n) : null;
 }
 
-// ----- pick the right p1..p5 slot -----
 function pickPeriodIndexByCategory(p, category) {
   const labels = [];
   for (let i = 1; i <= 5; i++)
@@ -21,25 +21,20 @@ function pickPeriodIndexByCategory(p, category) {
   const isTonight = i => has(i, "tonight") || has(i, "overnight");
   const isTomorrow = i => has(i, "tomorrow") && !has(i, "night");
 
-  let test =
-    category === "today" ? isToday :
-    category === "tonight" ? isTonight :
-    category === "tomorrow" ? isTomorrow : null;
+  let test;
+  if (category === "today") test = isToday;
+  else if (category === "tonight") test = isTonight;
+  else if (category === "tomorrow") test = isTomorrow;
 
-  if (test) {
-    for (let i = 1; i <= 5; i++) if (test(i)) return i;
-  }
+  if (test) for (let i = 1; i <= 5; i++) if (test(i)) return i;
 
-  return { today: 1, tonight: 2, tomorrow: 3 }[category] || 1;
+  return ({ today: 1, tonight: 2, tomorrow: 3 })[category] || 1;
 }
 
-// ----- LOAD YOUR GEOJSON (OBS + FORECAST) -----
 async function loadCalgaryAQHI() {
   const [obs, fc] = await Promise.all([
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson")
-      .then(r => r.json()),
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.geojson")
-      .then(r => r.json())
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson").then(r => r.json()),
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.geojson").then(r => r.json())
   ]);
 
   const obsCal = (obs.features || [])
@@ -50,41 +45,42 @@ async function loadCalgaryAQHI() {
     .map(f => f.properties)
     .filter(p => /calgary/i.test(p.name));
 
-  obsCal.sort((a, b) =>
+  obsCal.sort((a,b) =>
     new Date(b.observed || b.observation_datetime) -
     new Date(a.observed || a.observation_datetime)
   );
 
-  fcCal.sort((a, b) =>
+  fcCal.sort((a,b) =>
     new Date(b.forecast_datetime) -
     new Date(a.forecast_datetime)
   );
 
-  calgaryAQHI.current = obsCal.length ? {
-    station: obsCal[0].name,
-    value: safeRound(obsCal[0].aqhi),
-    time: obsCal[0].observed || obsCal[0].observation_datetime
-  } : null;
+  calgaryAQHI.current = obsCal.length
+    ? {
+        station: obsCal[0].name,
+        value: safeRound(obsCal[0].aqhi),
+        time: obsCal[0].observed || obsCal[0].observation_datetime
+      }
+    : null;
 
+  // STORE ENTIRE FORECAST OBJECT (this was your key bug)
   calgaryAQHI.forecast = fcCal.length ? fcCal[0] : null;
 
   console.log("Calgary AQHI loaded:", calgaryAQHI);
 }
 
-// ----- DRAW SINGLE PANEL (AQHI + WEATHER TOGETHER) -----
 function drawCalgaryPanel() {
-
   if (!calgaryAQHI.current) return;
 
   const v0 = calgaryAQHI.current.value;
-  const p  = calgaryAQHI.forecast;
+  const p = calgaryAQHI.forecast;
 
-  const todayIdx    = p ? pickPeriodIndexByCategory(p, "today")    : 1;
-  const tonightIdx  = p ? pickPeriodIndexByCategory(p, "tonight")  : 2;
+  const todayIdx    = p ? pickPeriodIndexByCategory(p, "today") : 1;
+  const tonightIdx  = p ? pickPeriodIndexByCategory(p, "tonight") : 2;
   const tomorrowIdx = p ? pickPeriodIndexByCategory(p, "tomorrow") : 3;
 
-  const fToday    = p ? safeRound(p[`p${todayIdx}_aqhi`])    : null;
-  const fTonight  = p ? safeRound(p[`p${tonightIdx}_aqhi`])  : null;
+  const fToday    = p ? safeRound(p[`p${todayIdx}_aqhi`]) : null;
+  const fTonight  = p ? safeRound(p[`p${tonightIdx}_aqhi`]) : null;
   const fTomorrow = p ? safeRound(p[`p${tomorrowIdx}_aqhi`]) : null;
 
   const html = `
@@ -104,10 +100,6 @@ function drawCalgaryPanel() {
 
   <div style="font-size:16px; font-weight:700;">
     Calgary Air Quality (AQHI)
-  </div>
-
-  <div style="font-size:12px; color:#555; margin-top:4px;">
-    Click the map for local weather + nearest stations.
   </div>
 
   <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:10px;">
@@ -147,15 +139,25 @@ function drawCalgaryPanel() {
       </div>
       <div style="font-size:11px;">Tomorrow</div>
     </div>
-
   </div>
 
   <div style="margin-top:10px; font-weight:600;">
-    Local Weather (current + next 6 hours)
+    Weather (next 6 hours)
   </div>
 
-  <div id="weather-info"
-       style="margin-top:6px; border:1px solid #999; border-radius:6px; padding:8px;">
+  <div id="mini-weather"
+       style="margin-top:6px; border:1px solid #999;
+              border-radius:6px; padding:8px;">
+  </div>
+
+  <div style="margin-top:10px;">
+    <div style="font-weight:600;">Wildfire & Smoke</div>
+    <a href="https://firesmoke.ca/forecasts/current/" target="_blank">
+      FireSmoke Canada – Current Forecast
+    </a><br>
+    <a href="https://weather.gc.ca/firework/index_e.html" target="_blank">
+      ECCC Wildfire Dashboard
+    </a>
   </div>
 
   </div>
