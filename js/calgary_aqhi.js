@@ -1,4 +1,8 @@
-let calgaryAQHI = { current: null, forecast: null };
+// ===============================
+// calgary_aqhi.js  (CLEAN VERSION)
+// ===============================
+
+window.calgaryAQHI = { current: null, forecast: null };
 
 function safeRound(val) {
   if (val === null || val === undefined || val === "") return null;
@@ -6,26 +10,10 @@ function safeRound(val) {
   return Number.isFinite(n) ? Math.round(n) : null;
 }
 
-/* -------------------------------------------------------
-   PERIOD PICKER THAT WORKS WITH CAN_AQHI (nested fields)
--------------------------------------------------------- */
 function pickPeriodIndexByCategory(p, category) {
-
-  // Build label list from nested structure if it exists
-  let labels = [];
-
-  if (p && p.forecast_period) {
-    for (let i = 1; i <= 5; i++) {
-      const per = p.forecast_period[`period_${i}`];
-      const lbl = (per?.forecast_period_en || "").toLowerCase();
-      labels.push(lbl);
-    }
-  } else {
-    // fallback (older flat style)
-    for (let i = 1; i <= 5; i++) {
-      labels.push(((p[`p${i}_label`] || "") + "").toLowerCase());
-    }
-  }
+  const labels = [];
+  for (let i = 1; i <= 5; i++)
+    labels.push(((p[`p${i}_label`] || "") + "").toLowerCase());
 
   const has = (i, s) => labels[i - 1].includes(s);
 
@@ -34,37 +22,56 @@ function pickPeriodIndexByCategory(p, category) {
     has(i, "this afternoon") ||
     (has(i, "this evening") && !has(i, "tonight"));
 
-  const isTonight = i =>
-    has(i, "tonight") || has(i, "overnight");
-
-  const isTomorrow = i =>
-    has(i, "tomorrow") && !has(i, "night");
+  const isTonight = i => has(i, "tonight") || has(i, "overnight");
+  const isTomorrow = i => has(i, "tomorrow") && !has(i, "night");
 
   let test;
   if (category === "today") test = isToday;
   else if (category === "tonight") test = isTonight;
   else if (category === "tomorrow") test = isTomorrow;
 
-  if (test) {
-    for (let i = 1; i <= 5; i++) {
-      if (test(i)) return i;
-    }
-  }
+  if (test) for (let i = 1; i <= 5; i++) if (test(i)) return i;
 
-  // Fallback mapping
   return ({ today: 1, tonight: 2, tomorrow: 3 })[category] || 1;
 }
 
-/* -------------------------------------------------------
-   LOAD CALGARY OBS + FORECAST (correct)
--------------------------------------------------------- */
-async function loadCalgaryAQHI() {
-  const [obs, fc] = await Promise.all([
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson")
-      .then(r => r.json()),
+// ---------- KEY FIX: handle BOTH flat + nested data ----------
+function getAQHI(p, idx) {
+  if (!p) return null;
 
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.geojson")
-      .then(r => r.json())
+  // Case A — your GitHub (FLAT) format
+  if (p[`p${idx}_aqhi`] !== undefined) {
+    return safeRound(p[`p${idx}_aqhi`]);
+  }
+
+  // Case B — true nested CAN_AQHI
+  if (p.forecast_period) {
+    const per = p.forecast_period[`period_${idx}`];
+    if (per && per.aqhi != null) return Math.round(Number(per.aqhi));
+  }
+
+  return null;
+}
+
+function getLabel(p, idx) {
+  if (!p) return null;
+
+  if (p[`p${idx}_label`]) return p[`p${idx}_label`];
+
+  if (p.forecast_period) {
+    const per = p.forecast_period[`period_${idx}`];
+    if (per && per.forecast_period_en) return per.forecast_period_en;
+  }
+
+  return null;
+}
+
+// ================= LOAD DATA =================
+async function loadCalgaryAQHI() {
+
+  const [obs, fc] = await Promise.all([
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson").then(r => r.json()),
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.geojson").then(r => r.json())
   ]);
 
   const obsCal = (obs.features || [])
@@ -85,80 +92,39 @@ async function loadCalgaryAQHI() {
     new Date(a.forecast_datetime)
   );
 
-  calgaryAQHI.current = obsCal.length
-    ? {
-        station: obsCal[0].name,
-        value: safeRound(obsCal[0].aqhi),
-        time: obsCal[0].observed || obsCal[0].observation_datetime
-      }
-    : null;
+  window.calgaryAQHI.current = obsCal.length ? {
+    station: obsCal[0].name,
+    value: safeRound(obsCal[0].aqhi),
+    time: obsCal[0].observed || obsCal[0].observation_datetime
+  } : null;
 
-  // STORE FULL FORECAST OBJECT (critical)
-  calgaryAQHI.forecast = fcCal.length ? fcCal[0] : null;
+  window.calgaryAQHI.forecast = fcCal.length ? fcCal[0] : null;
 
-  console.log("Calgary AQHI loaded:", calgaryAQHI);
+  console.log("Calgary AQHI LOADED:", window.calgaryAQHI);
 }
 
-/* -------------------------------------------------------
-   HELPERS TO READ NESTED CAN_AQHI FORECAST
--------------------------------------------------------- */
-function getNestedAQHI(p, idx) {
-
-  if (!p) return null;
-
-  // ---- CASE A: your flattened GitHub format (what you actually have) ----
-  const flat = p[`p${idx}_aqhi`];
-  if (flat !== undefined) {
-    return safeRound(flat);
-  }
-
-  // ---- CASE B: true nested CAN_AQHI format ----
-  if (p.forecast_period) {
-    const per = p.forecast_period[`period_${idx}`];
-    if (per && per.aqhi != null) {
-      return Math.round(Number(per.aqhi));
-    }
-  }
-
-  return null;
-}
-
-function getNestedLabel(p, idx) {
-
-  if (!p) return null;
-
-  // ---- CASE A: your flattened GitHub format ----
-  const flatLabel = p[`p${idx}_label`];
-  if (flatLabel) return flatLabel;
-
-  // ---- CASE B: nested CAN_AQHI ----
-  if (p.forecast_period) {
-    const per = p.forecast_period[`period_${idx}`];
-    if (per && per.forecast_period_en) {
-      return per.forecast_period_en;
-    }
-  }
-
-  return null;
-}
-
-
-/* -------------------------------------------------------
-   DRAW PANEL
--------------------------------------------------------- */
+// ================= DRAW PANEL =================
 function drawCalgaryPanel() {
-  if (!calgaryAQHI.current) return;
 
-  const v0 = calgaryAQHI.current.value;
-  const p = calgaryAQHI.forecast;
+  if (!window.calgaryAQHI.current) {
+    console.warn("No Calgary current AQHI yet.");
+    return;
+  }
+
+  const v0 = window.calgaryAQHI.current.value;
+  const p  = window.calgaryAQHI.forecast;
 
   const todayIdx    = p ? pickPeriodIndexByCategory(p, "today") : 1;
   const tonightIdx  = p ? pickPeriodIndexByCategory(p, "tonight") : 2;
   const tomorrowIdx = p ? pickPeriodIndexByCategory(p, "tomorrow") : 3;
 
-  const fToday    = getNestedAQHI(p, todayIdx);
-  const fTonight  = getNestedAQHI(p, tonightIdx);
-  const fTomorrow = getNestedAQHI(p, tomorrowIdx);
+  const fToday    = getAQHI(p, todayIdx);
+  const fTonight  = getAQHI(p, tonightIdx);
+  const fTomorrow = getAQHI(p, tomorrowIdx);
+
+  const labToday    = getLabel(p, todayIdx) || "Today";
+  const labTonight  = getLabel(p, tonightIdx) || "Tonight";
+  const labTomorrow = getLabel(p, tomorrowIdx) || "Tomorrow";
 
   const html = `
   <div id="calgary-panel" style="
@@ -196,7 +162,7 @@ function drawCalgaryPanel() {
            font-weight:bold; border:1px solid #333;">
         ${fToday ?? "–"}
       </div>
-      <div style="font-size:11px;">Today</div>
+      <div style="font-size:11px;">${labToday}</div>
     </div>
 
     <div style="text-align:center;">
@@ -205,7 +171,7 @@ function drawCalgaryPanel() {
            font-weight:bold; border:1px solid #333;">
         ${fTonight ?? "–"}
       </div>
-      <div style="font-size:11px;">Tonight</div>
+      <div style="font-size:11px;">${labTonight}</div>
     </div>
 
     <div style="text-align:center;">
@@ -214,7 +180,7 @@ function drawCalgaryPanel() {
            font-weight:bold; border:1px solid #333;">
         ${fTomorrow ?? "–"}
       </div>
-      <div style="font-size:11px;">Tomorrow</div>
+      <div style="font-size:11px;">${labTomorrow}</div>
     </div>
   </div>
 
@@ -244,8 +210,12 @@ function drawCalgaryPanel() {
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
+// ================= BOOTSTRAP =================
 loadCalgaryAQHI()
-  .then(drawCalgaryPanel)
+  .then(() => {
+    console.log("Drawing Calgary panel...");
+    drawCalgaryPanel();
+  })
   .catch(err => console.error("Calgary AQHI failed:", err));
 
 window.refreshCalgaryPanel = async function () {
