@@ -1,5 +1,21 @@
 async function renderClickData(lat, lng, map) {
 
+  function getPurpleAirList() {
+    // CASE 1 — your sensors are already in a Leaflet layer (most common)
+    if (window.purpleAirLayer && window.purpleAirLayer.getLayers) {
+      return window.purpleAirLayer.getLayers()
+        .map(l => l.feature?.properties || {})
+        .filter(p => p.Latitude && p.Longitude);
+    }
+    // CASE 2 — fallback to array if you already have one
+    if (Array.isArray(window.purpleAirSensors)) {
+      return window.purpleAirSensors;
+    }
+    return [];
+  }
+
+
+  
   // ---- 1) Marker at clicked point ----
   const marker = L.marker([lat, lng]);
   markerGroup.addLayer(marker);
@@ -43,7 +59,6 @@ async function renderClickData(lat, lng, map) {
     );
   
     const wdata = await wresp.json();
-  
     if (typeof showWeather === "function") showWeather(wdata);
   
   } catch (err) {
@@ -51,36 +66,36 @@ async function renderClickData(lat, lng, map) {
   }
 
 
+
   // ---- 4) THREE CLOSEST PURPLEAIR (FIXED DISTANCE LOGIC) ----
   let closestPA = [];
-
+  
   try {
-    if (typeof window.getClosestPurpleAir === "function") {
-      closestPA = window.getClosestPurpleAir(lat, lng, 3) || [];
-    }
-    else if (Array.isArray(window.purpleAirSensors)) {
-      closestPA = window.purpleAirSensors
-        .map(s => ({
-          name: s.name || s.SensorName || s.Label || "PurpleAir",
-          pm: s.pm25 ?? s.PM2_5 ?? s.pm2_5 ?? null,
-          lat: Number(s.lat ?? s.Latitude),
-          lng: Number(s.lng ?? s.Longitude),
-          dist_km: getDistance(lat, lng,
-            Number(s.lat ?? s.Latitude),
-            Number(s.lng ?? s.Longitude)) / 1000
-        }))
-        .filter(s => isFinite(s.lat) && isFinite(s.lng))
-        .sort((a,b) => a.dist_km - b.dist_km)
-        .slice(0,3);
-    }
+    const paList = getPurpleAirList();
+  
+    closestPA = paList
+      .map(s => ({
+        name: s.SensorName || s.Label || s.name || "PurpleAir",
+        pm: s.PM2_5 || s.pm25 || s.pm2_5 || null,
+        lat: Number(s.Latitude ?? s.lat),
+        lng: Number(s.Longitude ?? s.lng),
+        dist_km: getDistance(lat, lng,
+          Number(s.Latitude ?? s.lat),
+          Number(s.Longitude ?? s.lng)) / 1000
+      }))
+      .filter(s => isFinite(s.lat) && isFinite(s.lng))
+      .sort((a,b) => a.dist_km - b.dist_km)
+      .slice(0,3);
+  
   } catch (e) {
     console.warn("PurpleAir nearest lookup failed:", e);
   }
-
-  // Preserve your existing PurpleAir plotting
+  
+  // Keep your existing plotting (DO NOT REMOVE)
   if (typeof showPurpleAir === "function") {
     try { showPurpleAir(lat, lng); } catch (e) {}
   }
+
 
   // ---- 5) CLICK POPUP TABLE ----
   const stRows = closestStations.map(s => `
