@@ -103,18 +103,45 @@ async function loadCalgaryAQHI() {
    HELPERS TO READ NESTED CAN_AQHI FORECAST
 -------------------------------------------------------- */
 function getNestedAQHI(p, idx) {
-  if (!p || !p.forecast_period) return null;
-  const per = p.forecast_period[`period_${idx}`];
-  return per && per.aqhi != null
-    ? Math.round(Number(per.aqhi))
-    : null;
+
+  if (!p) return null;
+
+  // ---- CASE A: your flattened GitHub format (what you actually have) ----
+  const flat = p[`p${idx}_aqhi`];
+  if (flat !== undefined) {
+    return safeRound(flat);
+  }
+
+  // ---- CASE B: true nested CAN_AQHI format ----
+  if (p.forecast_period) {
+    const per = p.forecast_period[`period_${idx}`];
+    if (per && per.aqhi != null) {
+      return Math.round(Number(per.aqhi));
+    }
+  }
+
+  return null;
 }
 
 function getNestedLabel(p, idx) {
-  if (!p || !p.forecast_period) return null;
-  const per = p.forecast_period[`period_${idx}`];
-  return per?.forecast_period_en || null;
+
+  if (!p) return null;
+
+  // ---- CASE A: your flattened GitHub format ----
+  const flatLabel = p[`p${idx}_label`];
+  if (flatLabel) return flatLabel;
+
+  // ---- CASE B: nested CAN_AQHI ----
+  if (p.forecast_period) {
+    const per = p.forecast_period[`period_${idx}`];
+    if (per && per.forecast_period_en) {
+      return per.forecast_period_en;
+    }
+  }
+
+  return null;
 }
+
 
 /* -------------------------------------------------------
    DRAW PANEL
