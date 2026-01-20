@@ -6,10 +6,26 @@ function safeRound(val) {
   return Number.isFinite(n) ? Math.round(n) : null;
 }
 
+/* -------------------------------------------------------
+   PERIOD PICKER THAT WORKS WITH CAN_AQHI (nested fields)
+-------------------------------------------------------- */
 function pickPeriodIndexByCategory(p, category) {
-  const labels = [];
-  for (let i = 1; i <= 5; i++)
-    labels.push(((p[`p${i}_label`] || "") + "").toLowerCase());
+
+  // Build label list from nested structure if it exists
+  let labels = [];
+
+  if (p && p.forecast_period) {
+    for (let i = 1; i <= 5; i++) {
+      const per = p.forecast_period[`period_${i}`];
+      const lbl = (per?.forecast_period_en || "").toLowerCase();
+      labels.push(lbl);
+    }
+  } else {
+    // fallback (older flat style)
+    for (let i = 1; i <= 5; i++) {
+      labels.push(((p[`p${i}_label`] || "") + "").toLowerCase());
+    }
+  }
 
   const has = (i, s) => labels[i - 1].includes(s);
 
@@ -18,23 +34,37 @@ function pickPeriodIndexByCategory(p, category) {
     has(i, "this afternoon") ||
     (has(i, "this evening") && !has(i, "tonight"));
 
-  const isTonight = i => has(i, "tonight") || has(i, "overnight");
-  const isTomorrow = i => has(i, "tomorrow") && !has(i, "night");
+  const isTonight = i =>
+    has(i, "tonight") || has(i, "overnight");
+
+  const isTomorrow = i =>
+    has(i, "tomorrow") && !has(i, "night");
 
   let test;
   if (category === "today") test = isToday;
   else if (category === "tonight") test = isTonight;
   else if (category === "tomorrow") test = isTomorrow;
 
-  if (test) for (let i = 1; i <= 5; i++) if (test(i)) return i;
+  if (test) {
+    for (let i = 1; i <= 5; i++) {
+      if (test(i)) return i;
+    }
+  }
 
+  // Fallback mapping
   return ({ today: 1, tonight: 2, tomorrow: 3 })[category] || 1;
 }
 
+/* -------------------------------------------------------
+   LOAD CALGARY OBS + FORECAST (correct)
+-------------------------------------------------------- */
 async function loadCalgaryAQHI() {
   const [obs, fc] = await Promise.all([
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson").then(r => r.json()),
-    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.geojson").then(r => r.json())
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_observations.geojson")
+      .then(r => r.json()),
+
+    fetch("https://raw.githubusercontent.com/DKevinM/CAN_AQHI/main/data/aqhi_forecasts.geojson")
+      .then(r => r.json())
   ]);
 
   const obsCal = (obs.features || [])
@@ -63,12 +93,32 @@ async function loadCalgaryAQHI() {
       }
     : null;
 
-  // STORE ENTIRE FORECAST OBJECT (this was your key bug)
+  // STORE FULL FORECAST OBJECT (critical)
   calgaryAQHI.forecast = fcCal.length ? fcCal[0] : null;
 
   console.log("Calgary AQHI loaded:", calgaryAQHI);
 }
 
+/* -------------------------------------------------------
+   HELPERS TO READ NESTED CAN_AQHI FORECAST
+-------------------------------------------------------- */
+function getNestedAQHI(p, idx) {
+  if (!p || !p.forecast_period) return null;
+  const per = p.forecast_period[`period_${idx}`];
+  return per && per.aqhi != null
+    ? Math.round(Number(per.aqhi))
+    : null;
+}
+
+function getNestedLabel(p, idx) {
+  if (!p || !p.forecast_period) return null;
+  const per = p.forecast_period[`period_${idx}`];
+  return per?.forecast_period_en || null;
+}
+
+/* -------------------------------------------------------
+   DRAW PANEL
+-------------------------------------------------------- */
 function drawCalgaryPanel() {
   if (!calgaryAQHI.current) return;
 
@@ -79,9 +129,9 @@ function drawCalgaryPanel() {
   const tonightIdx  = p ? pickPeriodIndexByCategory(p, "tonight") : 2;
   const tomorrowIdx = p ? pickPeriodIndexByCategory(p, "tomorrow") : 3;
 
-  const fToday    = p ? safeRound(p[`p${todayIdx}_aqhi`]) : null;
-  const fTonight  = p ? safeRound(p[`p${tonightIdx}_aqhi`]) : null;
-  const fTomorrow = p ? safeRound(p[`p${tomorrowIdx}_aqhi`]) : null;
+  const fToday    = getNestedAQHI(p, todayIdx);
+  const fTonight  = getNestedAQHI(p, tonightIdx);
+  const fTomorrow = getNestedAQHI(p, tomorrowIdx);
 
   const html = `
   <div id="calgary-panel" style="
