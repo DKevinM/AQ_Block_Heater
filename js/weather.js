@@ -15,24 +15,37 @@ function showWeather(data) {
     i++;
   }
 
-  const get = (field) => data.hourly[field][i];
+  const get = f => data.hourly[f][i];
 
   const currentRows = `
-    <tr><td><strong>Time</strong></td><td>${now.toLocaleString('en-CA',{timeZone:'America/Edmonton'})}</td></tr>
-    <tr><td><strong>Temperature</strong></td><td>${get("temperature_2m")} °C</td></tr>
-    <tr><td><strong>Humidity</strong></td><td>${get("relative_humidity_2m")} %</td></tr>
-    <tr><td><strong>Precipitation</strong></td><td>${get("precipitation")} mm</td></tr>
-    <tr><td><strong>Cloud</strong></td><td>${get("cloudcover")} %</td></tr>
-    <tr><td><strong>Wind</strong></td><td>
-      ${Math.round(get("wind_speed_10m"))} km/h ${degToCardinal(get("wind_direction_10m"))}
-    </td></tr>
-    <tr><td><strong>UV Index</strong></td><td>${Math.round(get("uv_index"))}</td></tr>
+    <tr><td><strong>Time</strong></td>
+        <td>${now.toLocaleString('en-CA',{timeZone:'America/Edmonton'})}</td></tr>
+
+    <tr><td><strong>Temperature</strong></td>
+        <td>${get("temperature_2m")} °C</td></tr>
+
+    <tr><td><strong>Humidity</strong></td>
+        <td>${get("relative_humidity_2m")} %</td></tr>
+
+    <tr><td><strong>Precipitation</strong></td>
+        <td>${get("precipitation")} mm</td></tr>
+
+    <tr><td><strong>Cloud</strong></td>
+        <td>${get("cloudcover")} %</td></tr>
+
+    <tr><td><strong>Wind</strong></td>
+        <td>${Math.round(get("wind_speed_10m"))} km/h
+            ${degToCardinal(get("wind_direction_10m"))}</td></tr>
+
+    <tr><td><strong>UV Index</strong></td>
+        <td>${Math.round(get("uv_index"))}</td></tr>
   `;
 
   let forecastRows = "";
   for (let j = 1; j <= 6; j++) {
     const t = new Date(data.hourly.time[i+j]);
-    const hhmm = t.toLocaleTimeString("en-CA",{hour:"2-digit",minute:"2-digit",timeZone:"America/Edmonton"});
+    const hhmm = t.toLocaleTimeString("en-CA",
+      {hour:"2-digit", minute:"2-digit", timeZone:"America/Edmonton"});
 
     forecastRows += `
       <tr>
@@ -45,10 +58,10 @@ function showWeather(data) {
   }
 
   document.querySelector("#weather-info").innerHTML = `
-    <h3 style="margin:0;">Current Weather</h3>
+    <h4 style="margin:0;">Current Weather</h4>
     <table><tbody>${currentRows}</tbody></table>
 
-    <h3 style="margin-top:8px;">Next 6 Hours</h3>
+    <h4 style="margin-top:8px;">Next 6 Hours</h4>
     <table>
       <thead>
         <tr><th>Time</th><th>Temp</th><th>Wind</th><th>Precip</th></tr>
