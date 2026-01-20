@@ -65,8 +65,8 @@ async function renderClickData(lat, lng, map) {
           lat: Number(s.lat ?? s.Latitude),
           lng: Number(s.lng ?? s.Longitude),
           dist_km: getDistance(lat, lng,
-            s.lat ?? s.Latitude,
-            s.lng ?? s.Longitude) / 1000
+            Number(s.lat ?? s.Latitude),
+            Number(s.lng ?? s.Longitude)) / 1000
         }))
         .filter(s => isFinite(s.lat) && isFinite(s.lng))
         .sort((a,b) => a.dist_km - b.dist_km)
