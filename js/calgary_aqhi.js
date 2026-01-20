@@ -135,9 +135,13 @@ function drawCalgaryPanel() {
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
+
 loadCalgaryAQHI()
-  .then(drawCalgaryPanel)
+  .then(() => {
+     setTimeout(drawCalgaryPanel, 800);   // <-- key fix
+  })
   .catch(err => console.error("Calgary AQHI failed:", err));
+
 
 window.refreshCalgaryPanel = async function () {
   await loadCalgaryAQHI();
