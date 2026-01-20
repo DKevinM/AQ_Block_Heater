@@ -85,6 +85,10 @@ function drawCalgaryPanel() {
       z-index: 9999;
   ">
     <div style="font-size:16px; font-weight:700;">Calgary Air Quality (AQHI)</div>
+    <div style="font-size:12px; color:#555; margin-top:4px;">
+      Click any location for detailed weather, nearest stations, and sensors.
+    </div>
+    
 
     <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:10px;">
       <div style="text-align:center;">
