@@ -162,12 +162,19 @@ window.dataReady.then(() => {
 <script src="js/calgary_aqhi.js"></script>  
 
 <script>
-  window.addEventListener("DOMContentLoaded", () => {
-    if (window.refreshCalgaryPanel) {
-      window.refreshCalgaryPanel();
-    }
-  });
+window.addEventListener("DOMContentLoaded", async () => {
+  // Wait 1 second to ensure calgary_aqhi.js has loaded
+  await new Promise(r => setTimeout(r, 1000));
+
+  if (window.refreshCalgaryPanel) {
+    console.log("Calling refreshCalgaryPanel()");
+    await window.refreshCalgaryPanel();
+  } else {
+    console.error("refreshCalgaryPanel is NOT defined — calgary_aqhi.js may not have loaded");
+  }
+});
 </script>
+
 
   
   
