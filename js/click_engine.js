@@ -41,14 +41,15 @@ async function renderClickData(lat, lng, map) {
       `snowfall,cloudcover,uv_index,wind_speed_10m,wind_direction_10m,` +
       `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
     );
-
+  
     const wdata = await wresp.json();
-
+  
     if (typeof showWeather === "function") showWeather(wdata);
-
+  
   } catch (err) {
     console.error("Weather error:", err);
   }
+
 
   // ---- 4) THREE CLOSEST PURPLEAIR (FIXED DISTANCE LOGIC) ----
   let closestPA = [];
