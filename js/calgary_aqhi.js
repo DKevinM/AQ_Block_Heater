@@ -103,28 +103,56 @@ async function loadCalgaryAQHI() {
   console.log("Calgary AQHI LOADED:", window.calgaryAQHI);
 }
 
-// ================= DRAW PANEL =================
-function drawCalgaryPanel() {
 
-  if (!window.calgaryAQHI.current) {
-    console.warn("No Calgary current AQHI yet.");
+
+
+async function loadCalgaryFromAB() {
+
+  const url =
+  "https://data.environment.alberta.ca/EdwServices/aqhi/odata/CommunityAqhis?$format=json";
+
+  const r = await fetch(url);
+  const data = await r.json();
+
+  const cal = data.value.find(c =>
+    c.CommunityName.toLowerCase() === "calgary"
+  );
+
+  if (!cal) {
+    console.error("No Calgary found in AB AQHI feed");
     return;
   }
 
-  const v0 = window.calgaryAQHI.current.value;
-  const p  = window.calgaryAQHI.forecast;
+  window.calgaryAQHI = {
+    current: {
+      station: "Calgary",
+      value: Number(cal.Aqhi),
+      time: cal.ReadingDate
+    },
+    forecast: {
+      today: Number(cal.ForecastToday),
+      tonight: Number(cal.ForecastTonight),
+      tomorrow: Number(cal.ForecastTomorrow)
+    }
+  };
 
-  const todayIdx    = p ? pickPeriodIndexByCategory(p, "today") : 1;
-  const tonightIdx  = p ? pickPeriodIndexByCategory(p, "tonight") : 2;
-  const tomorrowIdx = p ? pickPeriodIndexByCategory(p, "tomorrow") : 3;
+  console.log("Calgary AQHI from Alberta:", window.calgaryAQHI);
+}
 
-  const fToday    = getAQHI(p, todayIdx);
-  const fTonight  = getAQHI(p, tonightIdx);
-  const fTomorrow = getAQHI(p, tomorrowIdx);
 
-  const labToday    = getLabel(p, todayIdx) || "Today";
-  const labTonight  = getLabel(p, tonightIdx) || "Tonight";
-  const labTomorrow = getLabel(p, tomorrowIdx) || "Tomorrow";
+
+
+
+// ================= DRAW PANEL =================
+function drawCalgaryPanel() {
+
+  const C = window.calgaryAQHI;
+  if (!C || !C.current) return;
+
+  const v0 = Math.round(C.current.value);
+  const fToday = Math.round(C.forecast.today);
+  const fTonight = Math.round(C.forecast.tonight);
+  const fTomorrow = Math.round(C.forecast.tomorrow);
 
   const html = `
   <div id="calgary-panel" style="
@@ -151,7 +179,7 @@ function drawCalgaryPanel() {
       <div style="background:${getColor(v0)}; width:70px; height:40px;
            margin:auto; display:flex; align-items:center; justify-content:center;
            font-weight:bold; border:1px solid #333;">
-        ${v0 ?? "–"}
+        ${v0}
       </div>
       <div style="font-size:12px;">Current</div>
     </div>
@@ -160,37 +188,32 @@ function drawCalgaryPanel() {
       <div style="background:${getColor(fToday)}; width:70px; height:40px;
            margin:auto; display:flex; align-items:center; justify-content:center;
            font-weight:bold; border:1px solid #333;">
-        ${fToday ?? "–"}
+        ${fToday}
       </div>
-      <div style="font-size:11px;">${labToday}</div>
+      <div style="font-size:11px;">Today</div>
     </div>
 
     <div style="text-align:center;">
       <div style="background:${getColor(fTonight)}; width:70px; height:40px;
            margin:auto; display:flex; align-items:center; justify-content:center;
            font-weight:bold; border:1px solid #333;">
-        ${fTonight ?? "–"}
+        ${fTonight}
       </div>
-      <div style="font-size:11px;">${labTonight}</div>
+      <div style="font-size:11px;">Tonight</div>
     </div>
 
     <div style="text-align:center;">
       <div style="background:${getColor(fTomorrow)}; width:70px; height:40px;
            margin:auto; display:flex; align-items:center; justify-content:center;
            font-weight:bold; border:1px solid #333;">
-        ${fTomorrow ?? "–"}
+        ${fTomorrow}
       </div>
-      <div style="font-size:11px;">${labTomorrow}</div>
+      <div style="font-size:11px;">Tomorrow</div>
     </div>
   </div>
 
-  <div style="margin-top:10px; font-weight:600;">
-    Weather (next 6 hours)
-  </div>
-
-  <div id="mini-weather"
-       style="margin-top:6px; border:1px solid #999;
-              border-radius:6px; padding:8px;">
+  <div style="margin-top:10px;">
+    <strong>Last updated:</strong> ${new Date(C.current.time).toLocaleString()}
   </div>
 
   <div style="margin-top:10px;">
@@ -210,15 +233,14 @@ function drawCalgaryPanel() {
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
+
 // ================= BOOTSTRAP =================
-loadCalgaryAQHI()
-  .then(() => {
-    console.log("Drawing Calgary panel...");
-    drawCalgaryPanel();
-  })
+loadCalgaryFromAB()
+  .then(drawCalgaryPanel)
   .catch(err => console.error("Calgary AQHI failed:", err));
 
 window.refreshCalgaryPanel = async function () {
-  await loadCalgaryAQHI();
+  await loadCalgaryFromAB();
   drawCalgaryPanel();
 };
+
