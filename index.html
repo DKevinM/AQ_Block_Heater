@@ -97,21 +97,6 @@
 <body>
 <div id="map"></div>
 
-<!-- BIG WEATHER PANEL -->
-<div id="weather-info"
-     style="position:fixed;
-            bottom:250px;  
-            left:20px;
-            width:280px;
-            background:white;
-            padding:10px;
-            border:1px solid #888;
-            border-radius:8px;
-            font-size:13px;
-            z-index:9999;">
-</div>
-
-
   
   
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
@@ -174,6 +159,18 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 </script>
+
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  if (window.refreshCalgaryPanel) {
+    window.refreshCalgaryPanel();
+  }
+
+  // Calgary coordinates
+  window.showCurrentWeather(51.0447, -114.0719);
+});
+</script>
+  
 
 
   
