@@ -6,6 +6,42 @@ function degToCardinal(deg) {
 
 
 
+window.showCurrentWeather = async function(lat, lng) {
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+    `&current_weather=true` +
+    `&hourly=uv_index` +
+    `&timezone=America%2FEdmonton`;
+
+  try {
+    const r = await fetch(url);
+    const data = await r.json();
+
+    const cw = data.current_weather;
+    if (!cw) return;
+
+    const html = `
+      <table style="width:100%; font-size:12px;">
+        <tr><td><strong>Time</strong></td>
+            <td>${new Date(cw.time).toLocaleString("en-CA")}</td></tr>
+        <tr><td><strong>Temperature</strong></td>
+            <td>${Math.round(cw.temperature)} °C</td></tr>
+        <tr><td><strong>Wind</strong></td>
+            <td>${Math.round(cw.windspeed)} km/h
+                ${degToCardinal(cw.winddirection)}</td></tr>
+      </table>
+    `;
+
+    const el = document.getElementById("mini-weather");
+    if (el) el.innerHTML = html;
+
+  } catch (e) {
+    console.warn("Current weather failed:", e);
+  }
+};
+
+
+
 
 window.showWeatherForPoint = async function(lat, lng) {
   const url =
