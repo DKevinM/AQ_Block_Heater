@@ -6,17 +6,22 @@ function degToCardinal(deg) {
 
 
 
+
 window.showWeatherForPoint = async function(lat, lng) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,relative_humidity_2m,rain,cloudcover,wind_speed_10m,wind_direction_10m,uv_index&timezone=America%2FEdmonton`;
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+    `&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,uv_index` +
+    `&timezone=America%2FEdmonton`;
 
   try {
     const r = await fetch(url);
     const data = await r.json();
-    showWeather(data);   // <-- your existing renderer
+    updateMiniWeather(data);   // <- call the mini renderer directly
   } catch (e) {
     console.warn("Weather fetch failed:", e);
   }
 };
+
 
 
 
@@ -74,4 +79,6 @@ function updateMiniWeather(data) {
 
   const el = document.getElementById("mini-weather");
   if (el) el.innerHTML = html;
+
+  window.updateMiniWeather = updateMiniWeather;
 }
