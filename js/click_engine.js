@@ -89,7 +89,41 @@ async function renderClickData(lat, lng, map) {
     stationMarkers.push(circle);
   });
 
-  // ---- 3) WEATHER (ONE CALL ONLY) ----
+  // ---- 3) WEATHER (panel + popup use same fetch) ----
+  let currentWeather = null;
+  
+  try {
+    const r = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+      `&hourly=temperature_2m,relative_humidity_2m,precipitation,cloudcover,` +
+      `wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index` +
+      `&timezone=America%2FEdmonton`
+    );
+  
+    const data = await r.json();
+  
+    // 1️⃣ Extract current conditions
+    if (window.extractCurrentWeather) {
+      currentWeather = window.extractCurrentWeather(data);
+    }
+  
+    // 2️⃣ Update AQHI panel weather
+    if (window.renderPanelWeather) {
+      window.renderPanelWeather(
+        currentWeather,
+        lat,
+        lng,
+        window.lastClickedAddress // if you already store this
+      );
+    }
+  
+    // 3️⃣ Popup forecast (UNCHANGED)
+    weatherHtml = buildPopupWeatherTable(data);
+  
+  } catch (e) {
+    console.warn("Weather fetch failed", e);
+  }
+
 
 
 
