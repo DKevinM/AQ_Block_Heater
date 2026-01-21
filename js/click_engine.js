@@ -174,6 +174,44 @@ async function renderClickData(lat, lng, map) {
   }
 
 
+
+  // ---- 3b) UPDATE TOP-LEFT AQHI PANEL WITH CURRENT WEATHER ----
+  try {
+    const now = new Date();
+    let i = 0;
+  
+    while (i < data.hourly.time.length) {
+      if (new Date(data.hourly.time[i]) >= now) break;
+      i++;
+    }
+  
+    const currentWeather = {
+      temp: Math.round(data.hourly.temperature_2m[i]),
+      rh: data.hourly.relative_humidity_2m
+        ? Math.round(data.hourly.relative_humidity_2m[i])
+        : null,
+      precip: data.hourly.precipitation[i].toFixed(1),
+      cloud: data.hourly.cloudcover
+        ? Math.round(data.hourly.cloudcover[i])
+        : null,
+      uv: data.hourly.uv_index
+        ? data.hourly.uv_index[i].toFixed(1)
+        : null,
+      wind: Math.round(data.hourly.wind_speed_10m[i]),
+      gust: data.hourly.wind_gusts_10m
+        ? Math.round(data.hourly.wind_gusts_10m[i])
+        : null,
+      dir: data.hourly.wind_direction_10m[i]
+    };
+  
+    if (typeof window.renderPanelWeather === "function") {
+      window.renderPanelWeather(currentWeather, lat, lng);
+    }
+  
+  } catch (e) {
+    console.warn("Panel weather update failed", e);
+  }
+  
   
 
   // ---- 5) CLICK POPUP TABLE ----
