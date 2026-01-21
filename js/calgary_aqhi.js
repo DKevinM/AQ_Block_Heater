@@ -270,6 +270,31 @@ function renderPanelWeather(w, lat, lng, address) {
 }
 
 
+window.updatePanelLocation = function(address, lat, lng) {
+  const panel = document.getElementById("calgary-panel");
+  if (!panel) return;
+
+  let loc = panel.querySelector(".loc-line");
+
+  if (!loc) {
+    loc = document.createElement("div");
+    loc.className = "loc-line";
+    loc.style.marginBottom = "6px";
+    loc.style.fontSize = "0.85em";
+    loc.style.color = "#555";
+    panel.insertBefore(loc, panel.firstChild.nextSibling);
+  }
+
+  loc.innerHTML = `
+    <b>Location:</b><br>
+    ${address}<br>
+    <span style="font-size:0.8em;">
+      (${lat.toFixed(4)}, ${lng.toFixed(4)})
+    </span>
+  `;
+};
+
+
 
 // ================= BOOTSTRAP =================
 loadCalgaryFromAB()
