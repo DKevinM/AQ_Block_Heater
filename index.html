@@ -104,25 +104,17 @@
   
 <script src="data.js"></script> 
 
-
 <script src="js/purpleair.js"></script>   
 
-
-<script src="js/weather.js"></script> 
-  
-  
 <script src="js/main.js"></script>  
-
-
-<script src="js/click_engine.js"></script> 
-
 
 <script src="js/click_utils.js"></script>
 
-  
+<script src="js/calgary_aqhi.js"></script>    
 
+<script src="js/weather.js"></script> 
 
-
+<script src="js/click_engine.js"></script> 
   
 <script>
 window.dataReady.then(() => {
@@ -144,7 +136,7 @@ window.dataReady.then(() => {
 });
 </script>
 
-<script src="js/calgary_aqhi.js"></script>  
+
 
 <script>
 window.addEventListener("DOMContentLoaded", async () => {
@@ -159,7 +151,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // 2️⃣ Inject Calgary current weather into the panel
   if (window.showWeatherForPoint) {
-    window.showWeatherForPoint(51.0447, -114.0719);
   }
 
 });
