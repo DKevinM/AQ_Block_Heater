@@ -216,6 +216,20 @@ function drawCalgaryPanel() {
     <strong>Last updated:</strong> ${new Date(C.current.time).toLocaleString()}
   </div>
 
+
+  <div id="panel-weather"
+       style="
+         margin-top:10px;
+         padding-top:8px;
+         border-top:1px solid #ccc;
+         font-size:13px;
+       ">
+    <div style="color:#666; font-style:italic;">
+      Click map for current weather
+    </div>
+  </div>
+
+
   <div style="margin-top:10px;">
     <div style="font-weight:600;">Wildfire & Smoke</div>
     <a href="https://firesmoke.ca/forecasts/current/" target="_blank">
