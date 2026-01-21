@@ -166,8 +166,10 @@ window.addEventListener("DOMContentLoaded", () => {
     window.refreshCalgaryPanel();
   }
 
-  // Calgary coordinates
-  window.showCurrentWeather(51.0447, -114.0719);
+  // Calgary weather → AQHI panel
+  if (window.showWeatherForPoint) {
+    window.showWeatherForPoint(51.0447, -114.0719);
+  }
 });
 </script>
   
