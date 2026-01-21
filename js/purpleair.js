@@ -69,5 +69,34 @@ async function loadPurpleAir() {
   }
 }
 
+window.plotPurpleAirSensors = function () {
+  if (!window.purpleAirSensors || !map) return;
+
+  if (!window.purpleAirLayer) {
+    window.purpleAirLayer = L.layerGroup();
+  }
+
+  window.purpleAirLayer.clearLayers();
+
+  window.purpleAirSensors.forEach(s => {
+    if (!s.lat || !s.lng) return;
+
+    const pm = s.pm25 ?? s.PM2_5 ?? null;
+
+    const m = L.circleMarker([s.lat, s.lng], {
+      radius: 5,
+      fillColor: pm != null ? getPAColor(pm) : "#aaa",
+      color: "#222",
+      weight: 1,
+      fillOpacity: 0.8
+    });
+
+    m.feature = { properties: s };   // ← IMPORTANT FOR CLICKS
+    window.purpleAirLayer.addLayer(m);
+  });
+
+  window.purpleAirLayer.addTo(map);
+};
+
 // run it once map + paLayer exist
 document.addEventListener("DOMContentLoaded", loadPurpleAir);
