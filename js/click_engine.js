@@ -14,7 +14,7 @@ function buildPopupWeatherTable(data) {
       <tr>
         <td>${t.toLocaleTimeString("en-CA",{hour:"2-digit",minute:"2-digit"})}</td>
         <td>${Math.round(data.hourly.temperature_2m[i+j])}°C</td>
-        <td>${Math.round(data.hourly.wind_speed_10m[i+j])}
+        <td>${Math.round(data.hourly.wind_speed_10m[i+j])} km/h 
             ${degToCardinal(data.hourly.wind_direction_10m[i+j])}</td>
         <td>${data.hourly.precipitation[i+j].toFixed(1)} mm</td>
         <td>${Math.round(data.hourly.uv_index[i+j])}</td>
