@@ -234,6 +234,31 @@ function drawCalgaryPanel() {
 }
 
 
+
+function renderPanelWeather(w, lat, lng, address) {
+  const el = document.getElementById("mini-weather");
+  if (!el || !w) return;
+
+  el.innerHTML = `
+    <div style="font-size:12px; line-height:1.4;">
+      <div><b>Location</b></div>
+      <div>${address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`}</div>
+
+      <hr style="margin:6px 0">
+
+      <div><b>Current Weather</b></div>
+      <div>Temp: ${w.temp} °C</div>
+      <div>Humidity: ${w.rh} %</div>
+      <div>Precipitation: ${w.precip} mm</div>
+      <div>Cloud cover: ${w.cloud ?? "–"} %</div>
+      <div>UV index: ${w.uv}</div>
+      <div>Wind: ${w.wind} km/h ${degToCardinal(w.dir)}</div>
+      ${w.gust ? `<div>Gusts: ${w.gust} km/h</div>` : ""}
+    </div>
+  `;
+}
+
+
 // ================= BOOTSTRAP =================
 loadCalgaryFromAB()
   .then(drawCalgaryPanel)
