@@ -118,3 +118,28 @@ function updateMiniWeather(data) {
 
   window.updateMiniWeather = updateMiniWeather;
 }
+
+
+window.extractCurrentWeather = function (data) {
+  const now = new Date();
+  let i = 0;
+
+  while (i < data.hourly.time.length) {
+    if (new Date(data.hourly.time[i]) >= now) break;
+    i++;
+  }
+
+  return {
+    time: now.toLocaleString("en-CA", { timeZone: "America/Edmonton" }),
+    temp: data.hourly.temperature_2m[i],
+    rh: data.hourly.relative_humidity_2m[i],
+    precip: data.hourly.precipitation[i],
+    cloud: data.hourly.cloudcover?.[i],
+    uv: data.hourly.uv_index[i],
+    wind: data.hourly.wind_speed_10m[i],
+    gust: data.hourly.wind_gusts_10m?.[i],
+    dir: data.hourly.wind_direction_10m[i]
+  };
+};
+
+
