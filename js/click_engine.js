@@ -125,7 +125,29 @@ async function renderClickData(lat, lng, map) {
   }
 
 
+  // ---- 3c) REVERSE GEOCODE CLICK LOCATION ----
+  let addressText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse` +
+      `?lat=${lat}&lon=${lng}&format=json`
+    );
+    const geo = await r.json();
+  
+    if (geo && geo.display_name) {
+      addressText = geo.display_name;
+    }
+  } catch (e) {
+    console.warn("Reverse geocoding failed", e);
+  }
+  
+  // Push address into AQHI panel (same panel as weather)
+  if (typeof window.updatePanelLocation === "function") {
+    window.updatePanelLocation(addressText, lat, lng);
+  }
 
+  
 
 
   // ---- 4) THREE CLOSEST PURPLEAIR (FIXED DISTANCE LOGIC) ---- 
