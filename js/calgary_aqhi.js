@@ -255,8 +255,6 @@ function renderPanelWeather(w, lat, lng, address) {
 
   el.innerHTML = `
     <div><b>Current Weather</b></div>
-    <div><b>Location:</b> ${address || `${lat.toFixed(4)}, ${lng.toFixed(4)}`}</div>
-
     <div style="margin-top:6px;">
       <div><b>Temperature:</b> ${w.temp} °C</div>
       <div><b>Humidity:</b> ${w.rh} %</div>
