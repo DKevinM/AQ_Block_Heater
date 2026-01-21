@@ -1,3 +1,42 @@
+function buildPopupWeatherTable(data) {
+  const now = new Date();
+  let i = 0;
+
+  while (i < data.hourly.time.length) {
+    if (new Date(data.hourly.time[i]) >= now) break;
+    i++;
+  }
+
+  let rows = "";
+  for (let j = 0; j < 6; j++) {
+    const t = new Date(data.hourly.time[i + j]);
+    rows += `
+      <tr>
+        <td>${t.toLocaleTimeString("en-CA",{hour:"2-digit",minute:"2-digit"})}</td>
+        <td>${Math.round(data.hourly.temperature_2m[i+j])}°C</td>
+        <td>${Math.round(data.hourly.wind_speed_10m[i+j])}
+            ${degToCardinal(data.hourly.wind_direction_10m[i+j])}</td>
+        <td>${data.hourly.precipitation[i+j].toFixed(1)} mm</td>
+        <td>${Math.round(data.hourly.uv_index[i+j])}</td>
+      </tr>
+    `;
+  }
+
+  return `
+    <div style="margin-top:8px;">
+      <div style="font-weight:600;">Weather (next 6 hours)</div>
+      <table style="width:100%; font-size:11px;">
+        <tr><th>Time</th><th>Temp</th><th>Wind</th><th>Precip</th><th>UV</th></tr>
+        ${rows}
+      </table>
+    </div>
+  `;
+}
+
+
+
+
+
 async function renderClickData(lat, lng, map) {
 
 
@@ -51,23 +90,7 @@ async function renderClickData(lat, lng, map) {
   });
 
   // ---- 3) WEATHER (ONE CALL ONLY) ----
-  try {
-    const wresp = await fetch(
-      `https://api.open-meteo.com/v1/forecast?` +
-      `latitude=${lat}&longitude=${lng}` +
-      `&hourly=temperature_2m,relative_humidity_2m,precipitation,rain,` +
-      `snowfall,cloudcover,uv_index,wind_speed_10m,wind_direction_10m,` +
-      `wind_gusts_10m,weathercode&timezone=America%2FEdmonton`
-    );
-  
 
-    const wdata = await wresp.json();
-    if (typeof window.updateMiniWeather === "function") window.updateMiniWeather(wdata);
-
-  
-  } catch (err) {
-    console.error("Weather error:", err);
-  }
 
 
 
@@ -101,6 +124,24 @@ async function renderClickData(lat, lng, map) {
 
 
 
+  
+  let weatherHtml = "<div style='margin-top:6px;'>Weather unavailable</div>";
+  
+  try {
+    const r = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+      `&hourly=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,uv_index` +
+      `&timezone=America%2FEdmonton`
+    );
+    const data = await r.json();
+    weatherHtml = buildPopupWeatherTable(data);
+  } catch(e) {
+    console.warn("Popup weather failed", e);
+  }
+
+
+  
+
   // ---- 5) CLICK POPUP TABLE ----
   const stRows = closestStations.map(s => `
     <tr>
@@ -123,21 +164,40 @@ async function renderClickData(lat, lng, map) {
 
   const popupHtml = `
     <div style="font-size:12px; line-height:1.25;">
-      <div style="font-weight:700; margin-bottom:6px;">Nearest stations & sensors</div>
-
-      <div style="font-weight:600; margin:6px 0 3px;">AQHI stations (2)</div>
+  
+      <div style="font-weight:700; margin-bottom:6px;">
+        Nearest stations & sensors
+      </div>
+  
+      <div style="font-weight:600; margin:6px 0 3px;">
+        AQHI stations (2)
+      </div>
       <table style="width:100%; font-size:11px;">
-        <tr><th align="left">Station</th><th align="left">AQHI</th><th align="left">Dist</th></tr>
+        <tr>
+          <th align="left">Station</th>
+          <th align="left">AQHI</th>
+          <th align="left">Dist</th>
+        </tr>
         ${stRows}
       </table>
-
-      <div style="font-weight:600; margin:8px 0 3px;">PurpleAir (3)</div>
+  
+      <div style="font-weight:600; margin:8px 0 3px;">
+        PurpleAir (3)
+      </div>
       <table style="width:100%; font-size:11px;">
-        <tr><th align="left">Sensor</th><th align="left">PM2.5</th><th align="left">Dist</th></tr>
+        <tr>
+          <th align="left">Sensor</th>
+          <th align="left">PM2.5</th>
+          <th align="left">Dist</th>
+        </tr>
         ${paRows}
       </table>
+  
+      ${weatherHtml}
+  
     </div>
   `;
+
 
   marker.bindPopup(popupHtml, { maxWidth: 340 }).openPopup();
 }
