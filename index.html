@@ -160,22 +160,24 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 </script>
 
+  
 <script>
 window.addEventListener("DOMContentLoaded", () => {
+
+  // Build Calgary AQHI panel
   if (window.refreshCalgaryPanel) {
     window.refreshCalgaryPanel();
   }
 
-  // Calgary weather → AQHI panel
+  // Inject Calgary weather INTO AQHI box
   if (window.showWeatherForPoint) {
     window.showWeatherForPoint(51.0447, -114.0719);
   }
+
 });
 </script>
   
 
-
-  
   
 </body>
 </html>
