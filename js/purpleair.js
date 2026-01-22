@@ -84,15 +84,17 @@ async function loadPurpleAir() {
 
       marker.feature = { properties: sensorObj };
       
+
       marker.bindPopup(
         `<strong>PurpleAir</strong><br>` +
         `${label}<br>` +
         (sensorIndex != null ? `Sensor index: ${sensorIndex}<br>` : "") +
         `PM₂.₅ (corr): ${pm.toFixed(1)} µg/m³<br><hr>` +
-        `<a href="/AQHI.forecast/history/purpleair_history.html?sensor=${sensorIndex}" target="_blank">
+        `<a href="/history/sensor_compare.html?sensor=${sensorIndex}" target="_blank">
            View historical PM2.5
          </a>`
       );
+
 
       
       window.paLayer.addLayer(marker);
