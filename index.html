@@ -175,22 +175,23 @@
 
 
     /* ---------------- MOBILE LAYOUT ---------------- */
+    /* ================= MOBILE FIX ================= */
     @media screen and (max-width: 768px) {
     
       .legend,
-      .info-panel,
-      .weather-panel {
-        width: 90% !important;
+      .weather-panel,
+      .info-panel {
+        position: fixed !important;
+        left: 5% !important;
+        right: 5% !important;
+        width: auto !important;
+        max-width: 90% !important;
         font-size: 12px !important;
         padding: 6px !important;
       }
     
-      .leaflet-control {
-        font-size: 12px !important;
-      }
-    
       .legend img {
-        width: 120px !important;
+        width: 110px !important;
       }
     
       table {
@@ -199,11 +200,6 @@
     
       h2, h3 {
         font-size: 14px !important;
-      }
-    
-      button {
-        font-size: 12px !important;
-        padding: 4px 6px !important;
       }
     }
 
@@ -276,7 +272,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('/AQ_Block_Heater/sw.js');
 }
 </script>
 
