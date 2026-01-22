@@ -95,7 +95,6 @@ async function loadPurpleAir() {
 
     });
 
-    window.paLayer.addTo(paLayer);
 
   } catch (err) {
     console.error("Error loading PurpleAir data:", err);
