@@ -207,10 +207,6 @@ async function renderClickData(lat, lng, map) {
     console.warn("PurpleAir nearest lookup failed:", e);
   }
   
-  if (typeof showPurpleAir === "function") {
-    try { showPurpleAir(lat, lng); } catch (e) {}
-  }
-
 
 
   
