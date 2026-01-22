@@ -1,6 +1,6 @@
 // ---------- PURPLEAIR LOADER ----------
 window.purpleAirSensors = [];
-window.purpleAirMarkers = [];
+
 
 
 function getPM25Color(pm25) {
@@ -18,7 +18,9 @@ function getPM25Color(pm25) {
 }
 
 
-window.paLayer = window.paLayer || L.layerGroup();
+// Use the SAME PurpleAir layer created in main.js
+const paLayer = window.paLayer;
+
 
 
 const PURPLE_URL =
@@ -90,10 +92,9 @@ async function loadPurpleAir() {
       
       window.paLayer.addLayer(marker);
 
-      window.purpleAirMarkers.push(marker);
     });
 
-    window.paLayer.addTo(map);
+    window.paLayer.addTo(paLayer);
 
   } catch (err) {
     console.error("Error loading PurpleAir data:", err);
