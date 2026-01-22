@@ -91,7 +91,7 @@ async function loadPurpleAir() {
         `${label}<br>` +
         (sensorIndex != null ? `Sensor index: ${sensorIndex}<br>` : "") +
         `PM₂.₅ (corr): ${pm.toFixed(1)} µg/m³<br><hr>` +
-        `<a href="./history/sensor_compare.html?sensor=${sensorIndex}" target="_blank">
+        <a href="./history/sensor_compare.html?sensor_index=${sensorIndex}" target="_blank">
            View historical PM2.5
          </a>`
       );
