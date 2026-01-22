@@ -21,7 +21,7 @@ window.showCurrentWeather = async function(lat, lng) {
     if (!cw) return;
 
     const html = `
-      <table style="width:100%; font-size:12px;">
+      <table class="popup-weather">
         <tr><td><strong>Time</strong></td>
             <td>${new Date(cw.time).toLocaleString("en-CA")}</td></tr>
         <tr><td><strong>Temperature</strong></td>
