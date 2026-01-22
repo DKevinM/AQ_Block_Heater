@@ -40,19 +40,32 @@ function buildPopupWeatherTable(data) {
 async function renderClickData(lat, lng, map) {
 
 
+  
   function getPurpleAirList() {
-    if (window.purpleAirLayer && window.purpleAirLayer.getLayers) {
-      return window.purpleAirLayer.getLayers()
-        .map(l => l.feature?.properties || {})
-        .filter(p => p.Latitude && p.Longitude);
+  
+    // Primary: raw sensor objects (authoritative)
+    if (Array.isArray(window.purpleAirSensors) && window.purpleAirSensors.length) {
+      return window.purpleAirSensors;
     }
   
-    if (Array.isArray(window.purpleAirSensors)) {
-      return window.purpleAirSensors;
+    // Fallback: markers on map
+    if (window.purpleAirLayer && window.purpleAirLayer.getLayers) {
+      return window.purpleAirLayer.getLayers()
+        .map(l => {
+          const ll = l.getLatLng?.();
+          return ll ? {
+            name: "PurpleAir",
+            Latitude: ll.lat,
+            Longitude: ll.lng,
+            PM2_5: null
+          } : null;
+        })
+        .filter(Boolean);
     }
   
     return [];
   }
+
 
 
 
@@ -279,15 +292,12 @@ async function renderClickData(lat, lng, map) {
         PurpleAir (3)
       </div>
       <table style="width:100%; font-size:11px;">
-        <tr>
-          <th align="left">Sensor</th>
-          <th align="left">PM2.5</th>
-          <th align="left">Dist</th>
-        </tr>
+        <tr><th align="left">Sensor</th><th align="left">PM2.5</th><th align="left">Dist</th></tr>
         ${paRows}
       </table>
-  
+      
       ${weatherHtml}
+
   
     </div>
   `;
