@@ -33,7 +33,12 @@ map.on("click", async function (e) {
 
 // ---------- ONE SET OF LAYER GROUPS ONLY ----------
 const markerGroup = L.layerGroup().addTo(map);
-const paLayer = L.layerGroup().addTo(map);
+window.markerGroup = markerGroup;
+
+/* PurpleAir master layer (ONLY DEFINITION) */
+window.paLayer = L.layerGroup().addTo(map);
+const paLayer = window.paLayer;
+
 
 
 
