@@ -175,33 +175,46 @@
 
 
     /* ---------------- MOBILE LAYOUT ---------------- */
-    /* ================= MOBILE FIX ================= */
+    /* ================= REAL MOBILE FIX ================= */
     @media screen and (max-width: 768px) {
     
+      /* Let the map truly fill the screen */
+      #map {
+        height: 100vh !important;
+        width: 100vw !important;
+      }
+    
+      /* Turn desktop floating panels into bottom cards */
       .legend,
       .weather-panel,
       .info-panel {
+    
         position: fixed !important;
+    
+        top: auto !important;
+        bottom: 10px !important;
+    
         left: 5% !important;
         right: 5% !important;
+    
         width: auto !important;
         max-width: 90% !important;
+    
+        height: auto !important;
+        max-height: 35vh !important;
+    
+        overflow-y: auto !important;
+    
         font-size: 12px !important;
-        padding: 6px !important;
+        padding: 8px !important;
+        border-radius: 12px !important;
       }
     
-      .legend img {
-        width: 110px !important;
-      }
-    
-      table {
-        font-size: 11px !important;
-      }
-    
-      h2, h3 {
-        font-size: 14px !important;
-      }
+      table { font-size: 11px !important; }
+      h2, h3 { font-size: 14px !important; }
+      .legend img { width: 100px !important; }
     }
+
 
 
     
