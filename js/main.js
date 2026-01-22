@@ -34,7 +34,7 @@ map.on("click", async function (e) {
 // ---------- ONE SET OF LAYER GROUPS ONLY ----------
 const markerGroup = L.layerGroup().addTo(map);
 const paLayer = L.layerGroup().addTo(map);
-window.purpleAirMarkers = [];
+
 
 
 // Track markers so we can clear them
@@ -130,7 +130,7 @@ function clearMap() {
 
   existingMarkers = [];
   stationMarkers = [];
-  window.purpleAirMarkers = [];
+
 }
 
 
