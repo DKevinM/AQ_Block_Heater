@@ -129,7 +129,7 @@ window.updateMiniWeather = function(w) {
 // ---------------- CLEAR MAP ----------------
 function clearMap() {
   const allMarkers = existingMarkers
-    .concat(stationMarkers, window.purpleAirMarkers || []);
+    .concat(stationMarkers);
 
   allMarkers.forEach(m => map.removeLayer(m));
 
