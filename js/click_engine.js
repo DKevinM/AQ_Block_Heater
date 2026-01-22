@@ -22,15 +22,35 @@ function buildPopupWeatherTable(data) {
     `;
   }
 
+
   return `
-    <div style="margin-top:8px;">
-      <div style="font-weight:600;">Weather (next 6 hours)</div>
-      <table style="width:100%; font-size:11px;">
-        <tr><th>Time</th><th>Temp</th><th>Wind</th><th>Precip</th><th>UV</th></tr>
-        ${rows}
+    <div style="margin-top:10px;">
+      <div style="font-weight:600; margin-bottom:6px;">
+        Weather (next 6 hours)
+      </div>
+  
+      <table style="
+        width:100%;
+        font-size:11px;
+        border-collapse:collapse;
+        table-layout:fixed;
+      ">
+        <thead>
+          <tr style="border-bottom:1px solid #ddd;">
+            <th style="text-align:left; padding:4px 6px; width:22%;">Time</th>
+            <th style="text-align:right; padding:4px 6px; width:18%;">Temp</th>
+            <th style="text-align:left; padding:4px 6px; width:30%;">Wind</th>
+            <th style="text-align:right; padding:4px 6px; width:15%;">Precip</th>
+            <th style="text-align:right; padding:4px 6px; width:15%;">UV</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.replace(/<td>/g, '<td style="padding:4px 6px;">')}
+        </tbody>
       </table>
     </div>
   `;
+
 }
 
 
