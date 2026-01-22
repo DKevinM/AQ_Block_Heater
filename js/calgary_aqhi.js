@@ -229,18 +229,27 @@ function drawCalgaryPanel() {
     </div>
   </div>
 
-
+  
   <div style="margin-top:10px;">
-    <div style="font-weight:600;">Wildfire & Smoke</div>
+    <div style="font-weight:600;">Wildfire external resources</div>
+  
     <a href="https://firesmoke.ca/forecasts/current/" target="_blank">
       FireSmoke Canada – Current Forecast
     </a><br>
-    <a href="https://weather.gc.ca/firework/index_e.html" target="_blank">
+  
+    <a href="https://eer.cmc.ec.gc.ca/mandats/AutoSim/ops/Fire_CA_HRDPS_CWFIS/latest/Canada/latest/img/Canada/anim.html" target="_blank">
       ECCC Wildfire Dashboard
     </a>
   </div>
-
+  <hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">
+  <div style="margin-top:10px;">
+    <div style="font-weight:600;">Festival resources</div>
+  
+    <a href="https://calgaryfolkfest.com/block-heater/info" target="_blank">
+      Calgary Folk Fest – Block Heater Info
+    </a>
   </div>
+
   `;
 
   document.getElementById("calgary-panel")?.remove();
@@ -254,16 +263,40 @@ function renderPanelWeather(w, lat, lng, address) {
   if (!el || !w) return;
 
   el.innerHTML = `
-    <div><b>Current Weather</b></div>
-    <div style="margin-top:6px;">
-      <div><b>Temperature:</b> ${w.temp} °C</div>
-      <div><b>Humidity:</b> ${w.rh} %</div>
-      <div><b>Precipitation:</b> ${w.precip} mm</div>
-      <div><b>Cloud Cover:</b> ${w.cloud ?? "–"} %</div>
-      <div><b>UV Index:</b> ${w.uv}</div>
-      <div><b>Wind:</b> ${w.wind} km/h ${degToCardinal(w.dir)}</div>
-      ${w.gust ? `<div><b>Gusts:</b> ${w.gust} km/h</div>` : ""}
-    </div>
+    <div style="font-weight:600; margin-bottom:4px;">Current Weather</div>
+    <table style="width:100%; font-size:12px; border-collapse:collapse;">
+      <tr>
+        <td style="padding:2px 6px 2px 0;">Temperature</td>
+        <td style="text-align:right;">${w.temp} °C</td>
+      </tr>
+      <tr>
+        <td>Humidity</td>
+        <td style="text-align:right;">${w.rh} %</td>
+      </tr>
+      <tr>
+        <td>Precipitation</td>
+        <td style="text-align:right;">${w.precip} mm</td>
+      </tr>
+      <tr>
+        <td>Cloud cover</td>
+        <td style="text-align:right;">${w.cloud ?? "–"} %</td>
+      </tr>
+      <tr>
+        <td>UV index</td>
+        <td style="text-align:right;">${w.uv}</td>
+      </tr>
+      <tr>
+        <td>Wind</td>
+        <td style="text-align:right;">
+          ${w.wind} km/h ${degToCardinal(w.dir)}
+        </td>
+      </tr>
+      ${w.gust ? `
+      <tr>
+        <td>Gusts</td>
+        <td style="text-align:right;">${w.gust} km/h</td>
+      </tr>` : ""}
+    </table>
   `;
 }
 
@@ -284,7 +317,7 @@ window.updatePanelLocation = function(address, lat, lng) {
   }
 
   loc.innerHTML = `
-    <b>Location:</b><br>
+    <b>Location Picked:</b><br>
     ${address}<br>
     <span style="font-size:0.8em;">
       (${lat.toFixed(4)}, ${lng.toFixed(4)})
