@@ -37,11 +37,11 @@ function buildPopupWeatherTable(data) {
       ">
         <thead>
           <tr style="border-bottom:1px solid #ddd;">
-            <th style="text-align:left; padding:4px 6px; width:22%;">Time</th>
-            <th style="text-align:right; padding:4px 6px; width:18%;">Temp</th>
-            <th style="text-align:left; padding:4px 6px; width:30%;">Wind</th>
-            <th style="text-align:right; padding:4px 6px; width:15%;">Precip</th>
-            <th style="text-align:right; padding:4px 6px; width:15%;">UV</th>
+            <th style="text-align:center; padding:4px 6px; width:22%;">Time</th>
+            <th style="text-align:center; padding:4px 6px; width:18%;">Temp</th>
+            <th style="text-align:center; padding:4px 6px; width:30%;">Wind</th>
+            <th style="text-align:center; padding:4px 6px; width:15%;">Precip</th>
+            <th style="text-align:center; padding:4px 6px; width:15%;">UV</th>
           </tr>
         </thead>
         <tbody>
@@ -312,7 +312,7 @@ async function renderClickData(lat, lng, map) {
         PurpleAir (3)
       </div>
       <table style="width:100%; font-size:11px;">
-        <tr><th align="left">Sensor</th><th align="left">PM2.5</th><th align="left">Dist</th></tr>
+        <tr><th align="left">Sensor</th><th align="left">PM2.5 (μg/m³)</th><th align="left">Dist</th></tr>
         ${paRows}
       </table>
       
