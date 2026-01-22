@@ -19,8 +19,8 @@ function getPM25Color(pm25) {
 
 
 // Use the SAME PurpleAir layer created in main.js
-const paLayer = window.paLayer;
-marker.addTo(paLayer);
+const layer = window.paLayer;
+marker.addTo(layer);
 
 
 
