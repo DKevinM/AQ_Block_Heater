@@ -1,4 +1,10 @@
 // ---------- PURPLEAIR LOADER ----------
+window.purpleAirSensors = [];
+window.purpleAirMarkers = [];
+
+
+window.paLayer = window.paLayer || L.layerGroup();
+
 
 const PURPLE_URL =
   "https://raw.githubusercontent.com/DKevinM/AB_datapull/main/data/AB_PM25_map.json";
@@ -36,67 +42,49 @@ async function loadPurpleAir() {
         rec.name ||
         (sensorIndex != null ? `Sensor ${sensorIndex}` : "Unnamed sensor");
 
-      const color = getColor(String(eAQHI));
-
+      const sensorObj = {
+        SensorName: label,
+        sensor_index: sensorIndex,
+        Latitude: lat,
+        Longitude: lon,
+        PM2_5: pm,
+        pm25: pm,
+        eAQHI: eAQHI
+      };
+      
+      // store sensor for click lookups
+      window.purpleAirSensors.push(sensorObj);
+      
       const marker = L.circleMarker([lat, lon], {
         radius: 4,
-        fillColor: color,
+        fillColor: getPM25Color(pm),   // YOUR PA COLOR SCALE
         color: "#222",
         weight: 0.5,
         fillOpacity: 0.85
-      }).bindPopup(
+      });
+      
+
+      marker.feature = { properties: sensorObj };
+      
+      marker.bindPopup(
         `<strong>PurpleAir</strong><br>` +
         `${label}<br>` +
         (sensorIndex != null ? `Sensor index: ${sensorIndex}<br>` : "") +
-        `eAQHI: ${eAQHI}<br>` +
-        `PM₂.₅ (corr): ${pm.toFixed(1)} µg/m³` +
-        `<hr>` +
-        `<a href="/AQHI.forecast/history/sensor_compare.html?sensor_index=${sensorIndex}"
-           target="_blank">
-           View historical PM2.5
-        </a>`
+        `PM₂.₅ (corr): ${pm.toFixed(1)} µg/m³`
       );
+      
+      window.paLayer.addLayer(marker);
 
-      // IMPORTANT: add to your existing layer group
-      paLayer.addLayer(marker);
       window.purpleAirMarkers.push(marker);
     });
 
-    paLayer.addTo(map);
+    window.paLayer.addTo(map);
 
   } catch (err) {
     console.error("Error loading PurpleAir data:", err);
   }
 }
 
-window.plotPurpleAirSensors = function () {
-  if (!window.purpleAirSensors || !map) return;
 
-  if (!window.purpleAirLayer) {
-    window.purpleAirLayer = L.layerGroup();
-  }
-
-  window.purpleAirLayer.clearLayers();
-
-  window.purpleAirSensors.forEach(s => {
-    if (!s.lat || !s.lng) return;
-
-    const pm = s.pm25 ?? s.PM2_5 ?? null;
-
-    const m = L.circleMarker([s.lat, s.lng], {
-      radius: 5,
-      fillColor: pm != null ? getPAColor(pm) : "#aaa",
-      color: "#222",
-      weight: 1,
-      fillOpacity: 0.8
-    });
-
-    m.feature = { properties: s };   // ← IMPORTANT FOR CLICKS
-    window.purpleAirLayer.addLayer(m);
-  });
-
-  window.purpleAirLayer.addTo(map);
-};
-
-// run it once map + paLayer exist
+// run it once map + window.paLayer exist
 document.addEventListener("DOMContentLoaded", loadPurpleAir);
