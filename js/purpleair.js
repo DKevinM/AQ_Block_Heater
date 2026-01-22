@@ -3,6 +3,21 @@ window.purpleAirSensors = [];
 window.purpleAirMarkers = [];
 
 
+function getPM25Color(pm25) {
+  if (!pm25 || isNaN(pm25)) return "#808080";
+  if (pm25 > 100) return "#640100";
+  if (pm25 > 90)  return "#9a0100";
+  if (pm25 > 80)  return "#cc0001";
+  if (pm25 > 70)  return "#fe0002";
+  if (pm25 > 60)  return "#fd6866";
+  if (pm25 > 50)  return "#ff9835";
+  if (pm25 > 40)  return "#ffcb00";
+  if (pm25 > 30)  return "#fffe03";
+  if (pm25 > 20)  return "#016797";
+  return "#01cbff";
+}
+
+
 window.paLayer = window.paLayer || L.layerGroup();
 
 
