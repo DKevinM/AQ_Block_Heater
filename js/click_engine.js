@@ -323,5 +323,11 @@ async function renderClickData(lat, lng, map) {
   `;
 
 
-  marker.bindPopup(popupHtml, { maxWidth: 340 }).openPopup();
+
+  marker.bindPopup(popupHtml, {
+    maxWidth: 420,
+    minWidth: 380,
+    autoPanPadding: [20, 20]
+  }).openPopup();
+
 }
