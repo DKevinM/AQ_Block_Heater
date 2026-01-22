@@ -267,34 +267,34 @@ function renderPanelWeather(w, lat, lng, address) {
     <table style="width:100%; font-size:12px; border-collapse:collapse;">
       <tr>
         <td style="padding:2px 6px 2px 0;">Temperature</td>
-        <td style="text-align:right;">${w.temp} °C</td>
+        <td style="text-align:center;">${w.temp} °C</td>
       </tr>
       <tr>
         <td>Humidity</td>
-        <td style="text-align:right;">${w.rh} %</td>
+        <td style="text-align:center;">${w.rh} %</td>
       </tr>
       <tr>
         <td>Precipitation</td>
-        <td style="text-align:right;">${w.precip} mm</td>
+        <td style="text-align:center;">${w.precip} mm</td>
       </tr>
       <tr>
         <td>Cloud cover</td>
-        <td style="text-align:right;">${w.cloud ?? "–"} %</td>
+        <td style="text-align:center;">${w.cloud ?? "–"} %</td>
       </tr>
       <tr>
         <td>UV index</td>
-        <td style="text-align:right;">${w.uv}</td>
+        <td style="text-align:center;">${w.uv}</td>
       </tr>
       <tr>
         <td>Wind</td>
-        <td style="text-align:right;">
+        <td style="text-align:center;">
           ${w.wind} km/h ${degToCardinal(w.dir)}
         </td>
       </tr>
       ${w.gust ? `
       <tr>
         <td>Gusts</td>
-        <td style="text-align:right;">${w.gust} km/h</td>
+        <td style="text-align:center;">${w.gust} km/h</td>
       </tr>` : ""}
     </table>
   `;
