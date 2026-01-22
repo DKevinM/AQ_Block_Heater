@@ -174,7 +174,8 @@
 
 
 
-    /* ================= ACTUAL MOBILE FIX ================= */
+
+    /* ========== TIGHT MOBILE CARD ========== */
     @media screen and (max-width: 768px) {
     
       #calgary-panel,
@@ -182,37 +183,42 @@
     
         position: fixed !important;
     
-        top: auto !important;
-        bottom: 10px !important;
-    
-        left: 5% !important;
-        right: 5% !important;
+        bottom: 6px !important;
+        left: 3% !important;
+        right: 3% !important;
     
         width: auto !important;
-        max-width: 90% !important;
+        max-width: 94% !important;
     
-        height: auto !important;
-        max-height: 35vh !important;
-    
+        max-height: 26vh !important;   /* smaller card */
         overflow-y: auto !important;
     
-        font-size: 12px !important;
-        padding: 8px !important;
-        border-radius: 12px !important;
+        font-size: 11px !important;
+        padding: 6px !important;
+        border-radius: 10px !important;
       }
     
+      /* Shrink AQHI grid boxes */
       .aqhi-box {
-        width: 42px !important;
-        height: 30px !important;
-        font-size: 12px !important;
+        width: 34px !important;
+        height: 24px !important;
+        font-size: 11px !important;
       }
     
+      /* Shrink table text */
       .weather-table th,
       .weather-table td {
-        font-size: 11px !important;
-        padding: 3px !important;
+        font-size: 10px !important;
+        padding: 2px !important;
+      }
+    
+      .aqhi-label,
+      .subtitle,
+      .loc-line {
+        font-size: 10px !important;
       }
     }
+
 
 
 
