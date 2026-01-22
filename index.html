@@ -174,20 +174,11 @@
 
 
 
-    /* ---------------- MOBILE LAYOUT ---------------- */
-    /* ================= REAL MOBILE FIX ================= */
+    /* ================= ACTUAL MOBILE FIX ================= */
     @media screen and (max-width: 768px) {
     
-      /* Let the map truly fill the screen */
-      #map {
-        height: 100vh !important;
-        width: 100vw !important;
-      }
-    
-      /* Turn desktop floating panels into bottom cards */
-      .legend,
-      .weather-panel,
-      .info-panel {
+      #calgary-panel,
+      .info-box {
     
         position: fixed !important;
     
@@ -210,10 +201,19 @@
         border-radius: 12px !important;
       }
     
-      table { font-size: 11px !important; }
-      h2, h3 { font-size: 14px !important; }
-      .legend img { width: 100px !important; }
+      .aqhi-box {
+        width: 42px !important;
+        height: 30px !important;
+        font-size: 12px !important;
+      }
+    
+      .weather-table th,
+      .weather-table td {
+        font-size: 11px !important;
+        padding: 3px !important;
+      }
     }
+
 
 
 
