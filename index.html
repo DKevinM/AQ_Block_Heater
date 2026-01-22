@@ -240,7 +240,8 @@ function getPM25Color(pm25) {
 }
 
 // Global layer so click_engine.js can find PurpleAir
-window.purpleAirLayer = L.layerGroup();
+window.purpleAirLayer = paLayer;
+
 
 window.dataReady.then(() => {
 
