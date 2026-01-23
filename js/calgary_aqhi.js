@@ -299,7 +299,7 @@ window.updatePanelLocation = function(address, lat, lng) {
     loc.style.marginBottom = "6px";
     loc.style.fontSize = "0.85em";
     loc.style.color = "#555";
-    panel.insertBefore(loc, panel.firstChild.nextSibling);
+    panel.appendChild(loc);
   }
 
   loc.innerHTML = `
