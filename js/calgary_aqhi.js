@@ -296,9 +296,6 @@ window.updatePanelLocation = function(address, lat, lng) {
   if (!loc) {
     loc = document.createElement("div");
     loc.className = "loc-line";
-    loc.style.marginBottom = "6px";
-    loc.style.fontSize = "0.85em";
-    loc.style.color = "#555";
     panel.appendChild(loc);
   }
 
