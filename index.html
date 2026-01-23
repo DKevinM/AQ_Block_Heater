@@ -57,14 +57,23 @@
 
     
 
-    #calgary-panel {
+    .calgary-panel {
       position: absolute;
       top: 2vh;
       left: 2vw;
-      width: min(340px, 92vw);
-      overflow: hidden;
-      transition: max-height 0.3s ease;
+      width: min(420px, 92vw);
+      max-height: 70vh;
+      overflow-y: auto;
+    
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #999;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-family: Arial;
+      z-index: 9999;
     }
+
     
     /* Header always visible */
     .panel-header {
