@@ -154,20 +154,11 @@ function drawCalgaryPanel() {
   const fTonight = Math.round(C.forecast.tonight);
   const fTomorrow = Math.round(C.forecast.tomorrow);
 
+
   const html = `
-  <div id="calgary-panel" style="
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      background: white;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #999;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      max-width: 420px;
-      font-family: Arial;
-      z-index: 9999;
-  ">
+    <div id="calgary-panel" class="calgary-panel">
+    
+  
 
   <div style="font-size:16px; font-weight:700;">
     Calgary Air Quality (AQHI)
