@@ -232,7 +232,9 @@ function drawCalgaryPanel() {
   <hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">
   <div style="margin-top:10px;">
     <div style="font-weight:600;">Festival resources</div>
-  
+
+    <hr style="margin:10px 0;">
+
     <a href="https://calgaryfolkfest.com/block-heater/info" target="_blank">
       Calgary Folk Fest – Block Heater Info
     </a>
