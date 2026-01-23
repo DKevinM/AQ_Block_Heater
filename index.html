@@ -347,13 +347,10 @@ if ('serviceWorker' in navigator) {
 
   
 <script>
-function togglePanel(id) {
-  document.getElementById(id).style.display = 'none';
-}
-
 function showPanels() {
-  document.getElementById('calgary-panel').style.display = 'block';
-  document.querySelector('.info-box').style.display = 'block';
+  const panel = document.getElementById('calgary-panel');
+  panel.classList.remove('collapsed');
+  panel.classList.add('expanded');
 }
 </script>
 
