@@ -57,7 +57,11 @@
 
     
     #calgary-panel {
-      <button class="panel-close" onclick="togglePanel('calgary-panel')">✕</button>
+    <div id="calgary-panel" class="collapsed">
+      <div class="panel-header" onclick="toggleCalgaryPanel()">
+        AQHI & Forecast
+      </div> 
+      <div class="panel-content">
       position: absolute;
       top: 2vh;
       left: 2vw;
@@ -70,7 +74,42 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
       font-family: Arial, sans-serif;
       z-index: 2000; 
+      </div> 
+    </div> 
     }
+
+    #calgary-panel {
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    /* Header bar always visible */
+    .panel-header {
+      font-weight: bold;
+      cursor: pointer;
+      padding: 6px;
+      background: #f2f2f2;
+      border-radius: 6px;
+      text-align: center;
+    }
+    
+    /* Collapsed state */
+    #calgary-panel.collapsed {
+      height: 34px;
+    }
+    
+    /* Expanded state */
+    #calgary-panel.expanded {
+      height: auto;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    
+    /* Hide content when collapsed */
+    #calgary-panel.collapsed .panel-content {
+      display: none;
+    }
+      
     
     .loc-line {
       font-size: 0.85em;
@@ -309,6 +348,14 @@ function togglePanel(id) {
 function showPanels() {
   document.getElementById('calgary-panel').style.display = 'block';
   document.querySelector('.info-box').style.display = 'block';
+}
+</script>
+
+<script>
+function toggleCalgaryPanel() {
+  const panel = document.getElementById('calgary-panel');
+  panel.classList.toggle('collapsed');
+  panel.classList.toggle('expanded');
 }
 </script>
   
