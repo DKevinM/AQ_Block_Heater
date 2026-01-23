@@ -156,9 +156,6 @@ function drawCalgaryPanel() {
 
 
   const html = `
-    <div id="calgary-panel" class="calgary-panel">
-    
-  
 
   <div style="font-size:16px; font-weight:700;">
     Calgary Air Quality (AQHI)
@@ -242,9 +239,7 @@ function drawCalgaryPanel() {
   </div>
 
   `;
-
-  document.getElementById("calgary-panel")?.remove();
-  document.body.insertAdjacentHTML("beforeend", html);
+  document.getElementById("calgary-content").innerHTML = html;
 }
 
 
@@ -326,5 +321,8 @@ loadCalgaryFromAB()
 window.refreshCalgaryPanel = async function () {
   await loadCalgaryFromAB();
   drawCalgaryPanel();
+
+document.getElementById("calgary-content").innerHTML = html;
+  
 };
 
