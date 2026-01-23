@@ -34,8 +34,30 @@
       height: auto;
     }
 
+    .panel-close {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    #showPanelsBtn {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      z-index: 3000;
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
 
+    
     #calgary-panel {
+      <button class="panel-close" onclick="togglePanel('calgary-panel')">✕</button>
       position: absolute;
       top: 2vh;
       left: 2vw;
@@ -98,6 +120,7 @@
 
     
     .info-box {
+      <button class="panel-close" onclick="togglePanel('info-box')">✕</button>
       position: absolute;
       top: 2vh;
       left: 2vw;
@@ -208,6 +231,8 @@
 </head>
 <body>
 <div id="map"></div>
+<button id="showPanelsBtn" onclick="showPanels()">Show Panels</button>
+  
 
   
   
@@ -275,6 +300,18 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+  
+<script>
+function togglePanel(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function showPanels() {
+  document.getElementById('calgary-panel').style.display = 'block';
+  document.querySelector('.info-box').style.display = 'block';
+}
+</script>
+  
   
 </body>
 </html>
