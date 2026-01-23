@@ -349,11 +349,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 </script>
 
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/AQ_Block_Heater/sw.js');
-}
-</script>
+
 
   
 <script>
@@ -371,7 +367,14 @@ function toggleCalgaryPanel() {
   panel.classList.toggle('expanded');
 }
 </script>
+
   
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/AQ_Block_Heater/sw.js');
+}
+</script>
+
   
 </body>
 </html>
