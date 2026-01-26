@@ -253,6 +253,71 @@ function drawCalgaryPanel() {
 
 
 
+function renderPanelWeather(w, lat, lng, address) {
+  const el = document.getElementById("panel-weather");
+  if (!el || !w) return;
+
+  el.innerHTML = `
+    <div style="font-weight:600; margin-bottom:4px;">Current Weather</div>
+    <table style="width:100%; font-size:12px; border-collapse:collapse;">
+      <tr>
+        <td style="padding:2px 6px 2px 0;">Temperature</td>
+        <td style="text-align:center;">${w.temp} °C</td>
+      </tr>
+      <tr>
+        <td>Humidity</td>
+        <td style="text-align:center;">${w.rh} %</td>
+      </tr>
+      <tr>
+        <td>Precipitation</td>
+        <td style="text-align:center;">${w.precip} mm</td>
+      </tr>
+      <tr>
+        <td>Cloud cover</td>
+        <td style="text-align:center;">${w.cloud ?? "–"} %</td>
+      </tr>
+      <tr>
+        <td>UV index</td>
+        <td style="text-align:center;">${w.uv}</td>
+      </tr>
+      <tr>
+        <td>Wind</td>
+        <td style="text-align:center;">
+          ${w.wind} km/h ${degToCardinal(w.dir)}
+        </td>
+      </tr>
+      ${w.gust ? `
+      <tr>
+        <td>Gusts</td>
+        <td style="text-align:center;">${w.gust} km/h</td>
+      </tr>` : ""}
+    </table>
+  `;
+}
+
+
+window.updatePanelLocation = function(address, lat, lng) {
+  const panel = document.getElementById("calgary-panel");
+  if (!panel) return;
+
+  let loc = panel.querySelector(".loc-line");
+
+  if (!loc) {
+    loc = document.createElement("div");
+    loc.className = "loc-line";
+    panel.appendChild(loc);
+  }
+
+  loc.innerHTML = `
+    <b>Location Picked:</b><br>
+    ${address}<br>
+    <span style="font-size:0.8em;">
+      (${lat.toFixed(4)}, ${lng.toFixed(4)})
+    </span>
+  `;
+};
+
+
 
 
 // ================= BOOTSTRAP =================
