@@ -148,7 +148,6 @@
 
     
     .info-box {
-      <button class="panel-close" onclick="togglePanel('info-box')">✕</button>
       position: absolute;
       top: 2vh;
       left: 2vw;
@@ -231,9 +230,17 @@
     /* ========== TIGHT MOBILE CARD ========== */
     @media screen and (max-width: 768px) {
     
+      .calgary-panel {
+        left: 6px !important;
+        right: 6px !important;
+        width: auto !important;
+        max-height: 75vh;
+        font-size: 12px;
+      }
+    
       .aqhi-box {
-        width: 38px;
-        height: 26px;
+        width: 36px;
+        height: 24px;
         font-size: 11px;
       }
     
@@ -242,21 +249,8 @@
         font-size: 10px;
         padding: 3px;
       }
-    
-      .aqhi-label,
-      .subtitle,
-      .loc-line {
-        margin-top: 14px;          /* creates the space above */
-        padding-top: 10px;
-        border-top: 1px solid #ddd;
-      
-        font-size: 13px;          /* same as your links/text */
-        color: #333;
-        font-family: Arial, sans-serif;
-        line-height: 1.4;
-      }
-
     }
+
 
 
 
@@ -278,13 +272,6 @@
 
   
 
-<div id="calgary-panel" class="collapsed">
-  <div class="panel-header" onclick="toggleCalgaryPanel()">
-    AQHI & Forecast (tap to expand)
-  </div>
-  <div class="panel-content" id="calgary-content"></div>
-</div>
-  
   
 <button id="showPanelsBtn" onclick="showPanels()">Show Panels</button>
   
