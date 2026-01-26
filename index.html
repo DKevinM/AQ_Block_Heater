@@ -9,7 +9,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <style>
-    #map { height: 100vh; }
+    #map {
+      height: 100vh;      /* fallback */
+      height: 100dvh;     /* correct mobile behavior */
+    }
     .legend {
       background: white;
       padding: 10px;
