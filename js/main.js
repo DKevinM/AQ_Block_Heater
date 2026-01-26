@@ -228,7 +228,11 @@ legend.addTo(map);
 const logo = L.control({ position: 'bottomright' });
 logo.onAdd = function () {
   const div = L.DomUtil.create('div', 'logo-container');
-  div.innerHTML = `<img src="ACA_LOGO_CMYK.png" alt="Logo">`;
+  div.innerHTML = `
+  <img src="ACA_LOGO_CMYK.png"
+       alt="Logo"
+       style="height:36px; width:auto; opacity:0.9;">
+  `;
   return div;
 };
 logo.addTo(map);
