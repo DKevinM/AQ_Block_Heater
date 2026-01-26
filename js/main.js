@@ -231,7 +231,7 @@ logo.onAdd = function () {
   div.innerHTML = `
   <img src="ACA_LOGO_CMYK.png"
        alt="Logo"
-       style="height:48px; width:auto; opacity:0.9;">
+       style="height:42px; width:auto; opacity:0.9;">
   `;
   return div;
 };
