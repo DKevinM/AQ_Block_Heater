@@ -1,10 +1,10 @@
 {
-  "name": "AQHI Festival",
-  "short_name": "Local AQHI",
-  "start_url": "/AQ_Block_Heater/index.html",
+  "name": "AQHI Block Heater",
+  "short_name": "AQHI",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1a1a1a",
+  "background_color": "#000000",
+  "theme_color": "#016797",
   "icons": [
     {
       "src": "icon-192.png",
