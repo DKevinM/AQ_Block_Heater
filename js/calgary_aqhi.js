@@ -262,9 +262,6 @@ loadCalgaryFromAB()
 
 window.refreshCalgaryPanel = async function () {
   await loadCalgaryFromAB();
-  drawCalgaryPanel();
-
-document.getElementById("calgary-content").innerHTML = html;
-  
+  drawCalgaryPanel();  
 };
 
