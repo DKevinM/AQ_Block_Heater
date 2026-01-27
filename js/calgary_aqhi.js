@@ -225,6 +225,12 @@ function drawCalgaryPanel() {
     </a><br>
   </div>
 
+  <div style="margin-top:10px;">
+    <div style="font-weight:600;">What is AQHI</div>
+    <a href="https://capitalairshed.ca/air-quality-health-index/" target="_blank">
+        What is AQHI
+    </a><br>
+  </div>
   
   <div style="margin-top:10px;">
     <div style="font-weight:600;">Wildfire external resources</div>
